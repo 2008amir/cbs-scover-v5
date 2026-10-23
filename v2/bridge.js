@@ -18,10 +18,7 @@ import commandLayer from '../lib/v2/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-/* Commands already provided by CBS-SCOVER-V1. V2 keeps the files, but when a
-   V2 command has the *exact same spelling* as a V1 command the V1
-   implementation stays in charge so nothing answers twice. Different
-   spellings (aliases V1 does not have) keep working from V2. */
+/* Actual V1 handlers are authoritative; unique V2 aliases remain routable. */
 const v1Commands = () => commandLayer.v1CommandNames()
 
 let ready = false
@@ -48,25 +45,6 @@ function ensureGlobals() {
     /* V1 answers everyone, so V2 must not run in self mode. */
     global.botMode = 'public'
 }
-
-/* V2 reads its owners from lib/database/owner.json; keep it in sync with the
-   V1 owner list so owner-only V2 commands recognise the same people. */
-function syncOwners() {
-    try {
-        const v1Path = path.join(process.cwd(), 'database', 'owner.json')
-        const v2Path = path.join(process.cwd(), 'lib', 'database', 'owner.json')
-        const v1 = JSON.parse(fs.readFileSync(v1Path, 'utf-8'))
-        const list = (Array.isArray(v1) ? v1 : Object.values(v1 || {}))
-            .flat()
-            .map(v => String(v).replace(/\D/g, ''))
-            .filter(Boolean)
-        const owner = String(global.ownernumber || '').replace(/\D/g, '')
-        if (owner) list.push(owner)
-        fs.mkdirSync(path.dirname(v2Path), { recursive: true })
-        fs.writeFileSync(v2Path, JSON.stringify([...new Set(list)], null, 2))
-    } catch {}
-}
-
 
 export async function init(sock) {
     ensureGlobals()
