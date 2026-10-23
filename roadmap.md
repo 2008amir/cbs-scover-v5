@@ -1,0 +1,10 @@
+- [x] Cap every long-lived memory structure (chat archive, learned people, connect chat list) and restore 24h/1h anti-delete retention to the index-side store; 29 tests pass. Live OptikLink redeploy uptime remains unverified.
+- [ ] Verify the bot survives >24h and >5 days on OptikLink after redeploy with `npm start`; if it dies again, capture the console text at the moment it stops.
+- [x] Remove disruptive memory clearing and repeated trimming output.
+- [x] Preserve WhatsApp encryption keys and recover disconnected connections safely.
+- [x] Run regression checks for long-uptime connection recovery (six passed; live OptikLink uptime remains unverified).
+- [x] Separate chat and video Gemini key pools and document .env setup.
+- [x] Replace .create's HTTP 404 endpoint with Gemini; 19 tests pass, including mocked image-to-WhatsApp delivery.
+- [x] Give image generation its own .env pool (IMAGE_GEMINI_KEY_1–5) and the Flash 3 image model (gemini-3.1-flash-image); 24 tests pass.
+- [ ] Verify .create in live WhatsApp on OptikLink: blocked by local Gemini keys being rejected; valid image-enabled credentials and deployment are required.
+- [x] Validate Hugging Face configuration: 13 regression tests passed and live Seed-VC /predict schema matches; authenticated provider calls and OptikLink remain unverified.
