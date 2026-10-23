@@ -39,6 +39,6 @@ let handler = async (m, { EliteProTech, text }) => {
     }
 }
 
-handler.command = ['yts', 'ytsearch']
+handler.command = []
 
 export default handler

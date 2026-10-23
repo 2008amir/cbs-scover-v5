@@ -1,5 +1,5 @@
 let handler = async (EliteProTech, { messages, type }) => {
-    if (type !== 'notify') return
+    if (global.botname || type !== 'notify') return
 
     for (const raw of messages || []) {
         const chat = raw.key?.remoteJidAlt || raw.key?.remoteJid

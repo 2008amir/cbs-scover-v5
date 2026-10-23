@@ -36,6 +36,6 @@ let handler = async (m, { EliteProTech }) => {
     }
 }
 
-handler.command = ['toptt', 'tovn', 'tovoice']
+handler.command = ['tovoice']
 
 export default handler

@@ -7,5 +7,5 @@ let handler = async (m, { EliteProTech }) => {
         edit: sent.key
     })
 }
-handler.command = ['ping', 'speed']
+handler.command = ['speed']
 export default handler

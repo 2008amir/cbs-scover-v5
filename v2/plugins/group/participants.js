@@ -251,7 +251,7 @@ let handler = async (m, { EliteProTech, args, command }) => {
     }
 }
 
-handler.command = ['add', 'kick', 'promote', 'demote']
+handler.command = []
 handler.group = true
 handler.admin = true
 handler.isBotAdmin = true

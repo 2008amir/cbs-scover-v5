@@ -29,7 +29,7 @@ const defaultSettings = {
     autoTyping: false,
     autoRecordType: false
 }
-try {
+if (!global.botname) try {
     const saved = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
     global.prefix = typeof saved.prefix === 'string' ? saved.prefix : defaultSettings.prefix
     global.botMode = saved.mode === 'public' ? 'public' : defaultSettings.mode
@@ -172,7 +172,7 @@ export async function initEvents() {
     watch(eventDir, loadEventFile, unloadEventFile)
 }
 
-const wiredEventNames = new Set()
+const wiredSockets = new WeakMap()
 
 function handlerEventNames(handler) {
     if (!handler.on) return []
@@ -180,7 +180,11 @@ function handlerEventNames(handler) {
 }
 
 export function wireEventDispatchers(EliteProTech) {
-    wiredEventNames.clear()
+    let wiredEventNames = wiredSockets.get(EliteProTech)
+    if (!wiredEventNames) {
+        wiredEventNames = new Set()
+        wiredSockets.set(EliteProTech, wiredEventNames)
+    }
     const names = new Set([...eventHandlers.values()].flatMap(handlerEventNames))
     for (const name of names) {
         if (wiredEventNames.has(name)) continue
@@ -272,10 +276,10 @@ export default async function handleMessage(EliteProTech, m) {
         m.text = body
         m.isButtonResponse = isButtonResponse
 
-        const ownerList = readJSON('./lib/database/owner.json')
+        const ownerList = readJSON(global.botname ? './database/owner.json' : './lib/database/owner.json')
         const number = m.sender.split('@')[0]
         const botNumber = EliteProTech.decodeJid(EliteProTech.user.id).split('@')[0]
-        m.isOwner = ownerList.includes(number) || number === botNumber
+        m.isOwner = ownerList.includes(number) || number === botNumber || number === String(global.ownernumber || '').replace(/\D/g, '') || m.fromMe
         if (global.botMode === 'self' && !m.isOwner && !m.fromMe) return
 
         const notifReply = async (text, title) => {

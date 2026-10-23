@@ -131,7 +131,7 @@ function extractBody(m) {
 }
 
 async function handleAiVoice(EliteProTech, m) {
-    const prefix = global.prefix || '.';
+    const prefix = global.prefix ?? '.';
     const body = extractBody(m);
     if (!body || !body.startsWith(prefix) || body[prefix.length] === ' ') return false;
 
@@ -690,7 +690,7 @@ function helpSectionText(section, items, prefix) {
 async function handleExtraCommands(EliteProTech, m) {
 
 
-    const prefix = global.prefix || '.';
+    const prefix = global.prefix ?? '.';
     const body = extractBody(m);
     if (!body) return false;
 
@@ -1333,7 +1333,7 @@ const reacted = new Set();
 
 async function reactToCommand(EliteProTech, m) {
     try {
-        const prefix = global.prefix || '.';
+        const prefix = global.prefix ?? '.';
         const body = extractBody(m);
         if (!body || !body.startsWith(prefix) || body[prefix.length] === ' ') return;
         const command = body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase();
@@ -1350,16 +1350,11 @@ async function reactToCommand(EliteProTech, m) {
 }
 
 
-let v2Started = false;
-
 module.exports = async (EliteProTech, m, chatUpdate, store) => {
     try {
         rememberViewOnce(m);
-        /* Start the CBS-SCOVER-V2 plugin engine on the same socket, once. */
-        if (!v2Started) {
-            v2Started = true;
-            v2.init(EliteProTech).catch(() => {});
-        }
+        /* Initialize before parsing, including replacement sockets. */
+        await v2.init(EliteProTech);
         // Double tick behaviour is applied before anything else.
         try { await global.applyTickOnMessage?.(EliteProTech, m); } catch (e) { console.error('tick hook:', e?.message || e); }
 

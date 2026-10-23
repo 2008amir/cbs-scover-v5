@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const OWNER_DB_PATH = path.join(process.cwd(), 'lib', 'database', 'owner.json')
+const OWNER_DB_PATH = path.join(process.cwd(), 'database', 'owner.json')
 
 function readOwners() {
     try {
@@ -29,7 +29,7 @@ let handler = async (m, { EliteProTech }) => {
     await m.reply(text)
 }
 
-handler.command = ['listowner', 'owners']
+handler.command = ['owners']
 handler.owner = true
 
 export default handler

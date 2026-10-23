@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { getGroupMetadata } from '../../lib/myfunc.js'
 
-const OWNER_DB_PATH = path.join(process.cwd(), 'lib', 'database', 'owner.json')
+const OWNER_DB_PATH = path.join(process.cwd(), 'database', 'owner.json')
 
 function readOwners() {
     try {
@@ -49,7 +49,7 @@ let handler = async (m, { EliteProTech, args }) => {
     await m.reply(`Removed ${number} from owners.`)
 }
 
-handler.command = ['delowner', 'removeowner']
+handler.command = ['removeowner']
 handler.owner = true
 
 export default handler

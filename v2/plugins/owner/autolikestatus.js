@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-const SETTINGS_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'lib', 'database', 'settings.json')
+const SETTINGS_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'lib', 'database', 'settings.json')
 
 function readSettings() {
     try {
@@ -33,7 +33,7 @@ let handler = async (m, { args }) => {
     await m.reply(`Auto-like status is now *${next ? 'ON' : 'OFF'}*.`)
 }
 
-handler.command = ['autolike', 'autolikestatus']
+handler.command = ['autolike']
 handler.owner = true
 
 export default handler

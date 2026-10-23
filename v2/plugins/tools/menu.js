@@ -41,6 +41,6 @@ let handler = async (m) => {
     await m.reply(text.trim())
 }
 
-handler.command = ['menu', 'help']
+handler.command = []
 
 export default handler

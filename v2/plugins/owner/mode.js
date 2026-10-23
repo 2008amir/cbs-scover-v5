@@ -35,7 +35,7 @@ let handler = async (m, { args }) => {
     await m.reply(`Bot mode set to *${choice}*.${choice === 'self' ? ' Only the owner can use commands now.' : ' Anyone can use commands now.'}`)
 }
 
-handler.command = ['mode']
+handler.command = []
 handler.owner = true
 
 export default handler

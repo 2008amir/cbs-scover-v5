@@ -56,7 +56,7 @@ let handler = async (m, { EliteProTech, args }) => {
     await m.reply(`Added ${number} as an owner.`)
 }
 
-handler.command = ['addowner']
+handler.command = []
 handler.owner = true
 
 export default handler

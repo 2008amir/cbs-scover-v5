@@ -21,7 +21,7 @@ let handler = async (m, { EliteProTech, text }) => {
     }
 }
 
-handler.command = ['edit']
+handler.command = []
 handler.owner = true
 
 export default handler

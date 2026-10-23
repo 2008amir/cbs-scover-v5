@@ -41,7 +41,7 @@ let handler = async (m, { args, command }) => {
     await m.reply(`${label[command]} is now *${enabled ? 'ON' : 'OFF'}*.`)
 }
 
-handler.command = ['autorecording', 'autotyping', 'autorecordtype']
+handler.command = []
 handler.owner = true
 
 export default handler

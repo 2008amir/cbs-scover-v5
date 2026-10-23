@@ -2,7 +2,7 @@ let handler = async (m, { EliteProTech }) => {
     await EliteProTech.groupLeave(m.chat)
 }
 
-handler.command = ['left', 'leavegroup']
+handler.command = ['leavegroup']
 handler.group = true
 handler.owner = true
 

@@ -52,6 +52,6 @@ let handler = async (m, { EliteProTech, text }) => {
     }
 }
 
-handler.command = ['sticker', 's', 'stiker']
+handler.command = []
 
 export default handler

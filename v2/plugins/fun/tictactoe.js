@@ -79,8 +79,8 @@ document.getElementById('bbtn').onclick=()=>{banner.style.display='none';round++
 function afterMove(){
   const r=winner(cells);
   if(r.w){winLine=r.l;
-    if(r.w===1){you++;scoreEl.textContent=`You ${you} · CPU ${cpu}`;finish('You win!','Fresh tile art next round.');}
-    else{cpu++;scoreEl.textContent=`You ${you} · CPU ${cpu}`;finish('CPU wins','The computer took that one.');}
+    if(r.w===1){you++;scoreEl.textContent='You '+you+' · CPU '+cpu;finish('You win!','Fresh tile art next round.');}
+    else{cpu++;scoreEl.textContent='You '+you+' · CPU '+cpu;finish('CPU wins','The computer took that one.');}
     return true;}
   if(cells.every(v=>v)){finish('Draw','Nobody got three in a row.');return true;}
   return false;

@@ -36,6 +36,6 @@ let handler = async (m, { EliteProTech }) => {
     }
 }
 
-handler.command = ['tovideo', 'tomp4']
+handler.command = []
 
 export default handler
