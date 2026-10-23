@@ -8,7 +8,7 @@
 - [x] Remove disruptive memory clearing and repeated trimming output.
 - [x] Preserve WhatsApp encryption keys and recover disconnected connections safely.
 - [x] Run regression checks for long-uptime connection recovery (six passed; live OptikLink uptime remains unverified).
-- [x] Separate chat and video Gemini key pools and document .env setup.
+- [x] Separate chat and video Gemini key pools and document .env setup; .env now carries GEMINI_YOUTUBE_KEY_1–5 (slots 1–4 filled, 5 spare) and video learning reads only that pool — verified 3 video keys load separately from 4 chat keys, all 51 tests pass.
 - [x] Replace .create's HTTP 404 endpoint with Gemini; 19 tests pass, including mocked image-to-WhatsApp delivery.
 - [x] Give image generation its own .env pool (IMAGE_GEMINI_KEY_1–5) and the Flash 3 image model (gemini-3.1-flash-image); 24 tests pass.
 - [ ] Verify .create in live WhatsApp on OptikLink: blocked by local Gemini keys being rejected; valid image-enabled credentials and deployment are required.
