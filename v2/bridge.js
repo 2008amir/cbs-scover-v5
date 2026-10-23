@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import handleMessage, { plugins, initPlugins, initEvents, wireEventDispatchers } from './index.js'
 import { smsg, bind, decorateSocket } from './lib/myfunc.js'
 import commandLayer from '../lib/v2/index.js'
+import fonts from '../lib/fonts.js'
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -51,6 +52,7 @@ export async function init(sock) {
     if (sock && socket !== sock) {
         socket = sock
         decorateSocket(sock)
+        fonts.attachFonts(sock)
         try { bind(sock) } catch {}
     }
     if (!ready) {

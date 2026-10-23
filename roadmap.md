@@ -1,3 +1,4 @@
+- [ ] Add 30 font previews, linked-account activation/deactivation, supplied-text conversion, and automated verification.
 - [x] Remove 50 duplicate V2 command registrations without adding or moving files; unify prefix/status settings, repair Tic Tac Toe loading, and verify merged dispatch with simulated WhatsApp messages. Live WhatsApp delivery requires a connected deployment and remains unverified.
 - [x] Cap every long-lived memory structure (chat archive, learned people, connect chat list) and restore 24h/1h anti-delete retention to the index-side store; 29 tests pass. Live OptikLink redeploy uptime remains unverified.
 - [ ] Verify the bot survives >24h and >5 days on OptikLink after redeploy with `npm start`; if it dies again, capture the console text at the moment it stops.
