@@ -13,6 +13,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import handleMessage, { plugins, initPlugins, initEvents, wireEventDispatchers } from './index.js'
 import { smsg, bind, decorateSocket } from './lib/myfunc.js'
+import commandLayer from '../lib/v2/index.js'
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -21,47 +22,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
    V2 command has the *exact same spelling* as a V1 command the V1
    implementation stays in charge so nothing answers twice. Different
    spellings (aliases V1 does not have) keep working from V2. */
-const STATIC_V1_COMMANDS = [
-    'menu', 'help', 'sticker', 's', 'toaudio', 'tomp3', 'tovideo',
-    'toptt', 'url', 'getpp', 'pp', 'yts', 'ytsearch',
-    'uptime', 'runtime', 'poll', 'tagall', 'hidetag',
-    'add', 'kick', 'promote', 'demote', 'open', 'close', 'left',
-    'owner', 'addowner', 'delowner', 'listowner',
-    'mode', 'setprefix', 'setpp',
-    'delete', 'del', 'eval', 'autoread', 'autoviewstatus',
-    'autolike', 'autorecording', 'autotyping'
-]
-
-/* Names are discovered from V1 itself (the cached remote handler + the local
-   ElitePro command file) so only true same-spelling duplicates are removed. */
-let v1Cache = null
-function v1Commands() {
-    if (v1Cache) return v1Cache
-    const names = new Set(STATIC_V1_COMMANDS)
-
-    for (const name of global.V1_COMMAND_NAMES || []) {
-        const key = String(name || '').toLowerCase().trim()
-        if (key) names.add(key)
-    }
-
-    const files = [
-        path.join(process.cwd(), 'ElitePro.js'),
-        path.join(process.cwd(), 'lib', 'v1', 'commands.js'),
-        path.join(process.cwd(), 'lib', 'v1', 'source.js')
-    ]
-    for (const file of files) {
-        let src = ''
-        try { src = fs.readFileSync(file, 'utf-8') } catch { continue }
-        for (const m of src.matchAll(/case\s*'([a-z0-9_\-]{1,24})'\s*:/gi)) names.add(m[1].toLowerCase())
-        for (const m of src.matchAll(/command\s*===\s*'([a-z0-9_\-]{1,24})'/gi)) names.add(m[1].toLowerCase())
-    }
-
-    v1Cache = names
-    return names
-}
+const v1Commands = () => commandLayer.v1CommandNames()
 
 let ready = false
 let socket = null
+let initialization = null
 
 
 /* Keep V2 globals it depends on, without overwriting V1 branding. */
@@ -105,17 +70,18 @@ function syncOwners() {
 
 export async function init(sock) {
     ensureGlobals()
-    syncOwners()
-
     if (sock && socket !== sock) {
         socket = sock
         decorateSocket(sock)
         try { bind(sock) } catch {}
     }
     if (!ready) {
-        await initPlugins()
-        await initEvents()
-        ready = true
+        if (!initialization) initialization = (async () => {
+            await initPlugins()
+            await initEvents()
+            ready = true
+        })().catch(error => { initialization = null; throw error })
+        await initialization
     }
     if (socket) {
         try { wireEventDispatchers(socket) } catch {}

@@ -29,7 +29,7 @@ const defaultSettings = {
     autoTyping: false,
     autoRecordType: false
 }
-try {
+if (!global.botname) try {
     const saved = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
     global.prefix = typeof saved.prefix === 'string' ? saved.prefix : defaultSettings.prefix
     global.botMode = saved.mode === 'public' ? 'public' : defaultSettings.mode
@@ -172,7 +172,7 @@ export async function initEvents() {
     watch(eventDir, loadEventFile, unloadEventFile)
 }
 
-const wiredEventNames = new Set()
+const wiredSockets = new WeakMap()
 
 function handlerEventNames(handler) {
     if (!handler.on) return []
@@ -180,7 +180,11 @@ function handlerEventNames(handler) {
 }
 
 export function wireEventDispatchers(EliteProTech) {
-    wiredEventNames.clear()
+    let wiredEventNames = wiredSockets.get(EliteProTech)
+    if (!wiredEventNames) {
+        wiredEventNames = new Set()
+        wiredSockets.set(EliteProTech, wiredEventNames)
+    }
     const names = new Set([...eventHandlers.values()].flatMap(handlerEventNames))
     for (const name of names) {
         if (wiredEventNames.has(name)) continue

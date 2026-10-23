@@ -1,4 +1,4 @@
-require('dotenv').config();
+const { configureBotSettings } = require('./lib/env-config');
 const fs = require('fs');
 const chalk = require('chalk');
 
@@ -50,6 +50,8 @@ global.mess = {
     wait: '⏳ Processing your request... Please wait a moment.',
     error: '❌ An unexpected error occurred. Please try again later.',
 };
+
+configureBotSettings();
 
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {

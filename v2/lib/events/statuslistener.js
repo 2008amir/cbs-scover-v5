@@ -8,7 +8,8 @@ const emojis = [
 ]
 
 let handler = async (EliteProTech, { messages, type }) => {
-    if (type !== 'notify' || (!global.autoViewStatus && !global.autoLikeStatus)) return
+    // The merged bot already has V1's status watcher on this shared socket.
+    if (global.botname || type !== 'notify' || (!global.autoViewStatus && !global.autoLikeStatus)) return
 
     for (const raw of messages) {
         if (raw.key?.remoteJid !== 'status@broadcast' || raw.key?.fromMe) continue
