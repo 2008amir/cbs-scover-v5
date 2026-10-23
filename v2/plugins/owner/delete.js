@@ -25,6 +25,6 @@ let handler = async (m, { EliteProTech }) => {
     }
 }
 
-handler.command = ['delete', 'del']
+handler.command = []
 
 export default handler

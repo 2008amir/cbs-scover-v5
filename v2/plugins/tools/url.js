@@ -34,6 +34,6 @@ let handler = async (m, { args }) => {
     }
 }
 
-handler.command = ['url', 'tourl']
+handler.command = []
 
 export default handler

@@ -42,7 +42,7 @@ let handler = async (m, { EliteProTech }) => {
     }
 }
 
-handler.command = ['setpp', 'setfullpp', 'setfullprofilepicture']
+handler.command = []
 handler.owner = true
 
 export default handler

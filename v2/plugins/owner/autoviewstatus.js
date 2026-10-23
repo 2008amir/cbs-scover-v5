@@ -32,7 +32,7 @@ let handler = async (m, { args }) => {
     await m.reply(`Auto view status turned *${choice}*.`)
 }
 
-handler.command = ['autoviewstatus', 'avs']
+handler.command = ['avs']
 handler.owner = true
 
 export default handler

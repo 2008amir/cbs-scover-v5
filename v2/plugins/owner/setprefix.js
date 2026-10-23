@@ -32,7 +32,7 @@ let handler = async (m, { text }) => {
     await m.reply(`Prefix set to *${prefix || 'none'}*`)
 }
 
-handler.command = ['setprefix']
+handler.command = []
 handler.owner = true
 
 export default handler

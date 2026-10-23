@@ -46,7 +46,7 @@ let handler = async (m, { EliteProTech, text }) => {
     await EliteProTech.sendMessage(m.chat, { text: caption, mentions }, { quoted: m })
 }
 
-handler.command = ['totag', 'hidetag']
+handler.command = []
 handler.group = true
 handler.admin = true
 handler.ownerBypassAdmin = true

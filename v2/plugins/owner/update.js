@@ -146,7 +146,7 @@ let handler = async (m) => {
     }
 }
 
-handler.command = ['update']
+handler.command = []
 handler.owner = true
 
 export default handler

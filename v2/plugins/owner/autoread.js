@@ -28,7 +28,7 @@ let handler = async (m, { args }) => {
     await m.reply(`Auto-read is now *${enabled ? 'ON' : 'OFF'}*.`)
 }
 
-handler.command = ['autoread']
+handler.command = []
 handler.owner = true
 
 export default handler

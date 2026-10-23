@@ -18,6 +18,6 @@ let handler = async (m, { EliteProTech }) => {
     }, { quoted: m })
 }
 
-handler.command = ['owner']
+handler.command = []
 
 export default handler

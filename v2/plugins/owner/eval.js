@@ -113,7 +113,7 @@ let handler = async (m, {
     }
 }
 
-handler.command = ['eval']
+handler.command = []
 handler.owner = true
 handler.silentDeny = true
 

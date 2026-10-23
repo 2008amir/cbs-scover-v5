@@ -29,7 +29,7 @@ let handler = async (m, { EliteProTech }) => {
     await m.reply(text)
 }
 
-handler.command = ['listowner', 'owners']
+handler.command = ['owners']
 handler.owner = true
 
 export default handler

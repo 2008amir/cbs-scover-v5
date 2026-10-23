@@ -35,7 +35,7 @@ let handler = async (m, { EliteProTech, text }) => {
     }, { quoted: m })
 }
 
-handler.command = ['tagall', 'everyone']
+handler.command = []
 handler.group = true
 handler.admin = true
 handler.ownerBypassAdmin = true

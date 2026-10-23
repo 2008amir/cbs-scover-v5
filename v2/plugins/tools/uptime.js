@@ -17,6 +17,6 @@ let handler = async (m) => {
     await m.reply(`*Runtime:* ${formatDuration(process.uptime())}`)
 }
 
-handler.command = ['uptime', 'runtime']
+handler.command = []
 
 export default handler

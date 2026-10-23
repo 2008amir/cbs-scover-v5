@@ -37,6 +37,6 @@ let handler = async (m, { EliteProTech }) => {
     }
 }
 
-handler.command = ['toaudio', 'tomp3']
+handler.command = []
 
 export default handler

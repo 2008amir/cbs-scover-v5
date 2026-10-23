@@ -33,7 +33,7 @@ let handler = async (m, { args }) => {
     await m.reply(`Auto-like status is now *${next ? 'ON' : 'OFF'}*.`)
 }
 
-handler.command = ['autolike', 'autolikestatus']
+handler.command = ['autolike']
 handler.owner = true
 
 export default handler

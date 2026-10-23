@@ -19,6 +19,6 @@ let handler = async (m, { EliteProTech, text }) => {
     }
 }
 
-handler.command = ['poll']
+handler.command = []
 
 export default handler

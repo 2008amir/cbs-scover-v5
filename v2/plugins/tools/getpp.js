@@ -13,6 +13,6 @@ let handler = async (m, { EliteProTech }) => {
     }
 }
 
-handler.command = ['getpp', 'pp']
+handler.command = ['pp']
 
 export default handler

@@ -49,7 +49,7 @@ let handler = async (m, { EliteProTech, args }) => {
     await m.reply(`Removed ${number} from owners.`)
 }
 
-handler.command = ['delowner', 'removeowner']
+handler.command = ['removeowner']
 handler.owner = true
 
 export default handler

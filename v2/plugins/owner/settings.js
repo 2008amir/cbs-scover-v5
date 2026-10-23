@@ -15,7 +15,7 @@ let handler = async (m) => {
     )
 }
 
-handler.command = ['settings', 'setting']
+handler.command = ['setting']
 handler.owner = true
 
 export default handler
