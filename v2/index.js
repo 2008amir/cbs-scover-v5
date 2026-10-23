@@ -123,6 +123,14 @@ async function loadPlugin(file) {
             plugins.set(key, handler)
             keys.push(key)
         }
+        /* Menu-only listings (no handler.command, so never dispatched):
+           registered under a Symbol key so the menu can list them while
+           routing stays with whoever owns the real command. */
+        if (!keys.length && handler.menuCommands) {
+            const key = Symbol(file)
+            plugins.set(key, handler)
+            keys.push(key)
+        }
         pluginCache.set(file, keys)
     } catch (e) {
         console.error(`[PLUGIN] Failed ${file}`)
