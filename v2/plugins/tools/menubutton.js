@@ -7,7 +7,13 @@ let handler = async (m, { EliteProTech, text }) => {
     if (!text?.trim()) return reply(usage)
     try { menuButtons.parseMenu(text) }
     catch (error) { return reply(`${error.message}\n\n${usage}`) }
-    try { await menuButtons.sendMenu(EliteProTech, m, text) }
+    let image
+    const mime = m.quoted?.mimetype || m.quoted?.msg?.mimetype || ''
+    if (m.quoted && (m.quoted.mtype === 'imageMessage' || mime.startsWith('image/'))) {
+        try { image = await m.quoted.download() }
+        catch { return reply('Could not download the replied image. Please try again.') }
+    }
+    try { await menuButtons.sendMenu(EliteProTech, m, text, { image }) }
     catch (error) {
         console.error('[Menubutton] Menu delivery failed:', error?.message || error)
         return reply('Could not send or save this button menu. Please try again.')
