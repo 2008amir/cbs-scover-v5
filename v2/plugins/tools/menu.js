@@ -10,12 +10,13 @@ let handler = async (m) => {
         seen.add(h)
 
         if (h.silentDeny) continue
-        if (!h.command || h.command instanceof RegExp) continue
+        const listed = h.menuCommands || h.command
+        if (!listed || listed instanceof RegExp) continue
 
         const category = h.category || 'Other'
         if (!byCategory[category]) byCategory[category] = []
 
-        const commands = (Array.isArray(h.command) ? h.command : [h.command])
+        const commands = (Array.isArray(listed) ? listed : [listed])
             .filter(Boolean)
             .map(command => `${global.prefix || ''}${command}`)
 
