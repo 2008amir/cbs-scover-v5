@@ -4,6 +4,7 @@
 - Remove exact V1 spellings from V2 handler.command arrays without deleting plugin files; discover routing/menu ownership from actual V1 handlers, not a static denylist, to preserve unique V2 aliases.
 - Wire V2 events once per socket and let V1 own shared automation events in merged mode, preventing duplicate status receipts and reactions.
 - Keep Unicode font transforms and per-linked-account activation in lib/fonts.js using the existing settings store; attach once to the shared socket, preserve commands/URLs/mentions/code, and only edit recent fromMe text messages to avoid modifying other users or old history.
+- Resolve copied font previews through the shared font registry so command selection and displayed styles stay consistent; suppress successful plugin registration logs while retaining load failures.
 - Keep connection monitoring and socket-scoped timer disposal in lib/connection-health.js so reconnects do not accumulate background tasks.
 - Never delete active Baileys authentication/encryption files during scheduled maintenance; only explicit logout may clear credentials.
 - Maintenance expires bounded caches by retention policy, not process RSS, to preserve active conversations and anti-delete recovery.

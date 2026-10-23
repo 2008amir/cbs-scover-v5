@@ -123,7 +123,6 @@ async function loadPlugin(file) {
             keys.push(key)
         }
         pluginCache.set(file, keys)
-        console.log(`[PLUGIN] Loaded ${path.relative(pluginDir, file)}`)
     } catch (e) {
         console.error(`[PLUGIN] Failed ${file}`)
         console.error(e)
@@ -134,7 +133,6 @@ async function unloadPlugin(file) {
     if (!pluginCache.has(file)) return
     for (const key of pluginCache.get(file)) plugins.delete(key)
     pluginCache.delete(file)
-    console.log(`[PLUGIN] Unloaded ${path.relative(pluginDir, file)}`)
 }
 
 export async function initPlugins() {
