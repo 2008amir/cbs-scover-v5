@@ -10,6 +10,7 @@ import { useMultiFileAuthState, DisconnectReason, Browsers } from '@whiskeysocke
 import { smsg, makeWASocket, bind, sendNotification, getGroupMetadata } from './lib/myfunc.js'
 import { suppressSignalLogs } from './lib/filter.js'
 import './config.js'
+import menuButtons from '../lib/menu-buttons.js'
 
 suppressSignalLogs()
 
@@ -269,6 +270,11 @@ function extractCommandFromMessage(m) {
 
 export default async function handleMessage(EliteProTech, m) {
     try {
+        // Native menu replies are data, not commands; preserve their exact text.
+        if (menuButtons.buttonResponse(m)) {
+            if (global.botMode === 'self' && !m.fromMe && !m.isOwner) return
+            if (await menuButtons.handleMenuButtonReply(EliteProTech, m)) return
+        }
         const { body, isButtonResponse } = extractCommandFromMessage(m)
         if (!body) return
         m.text = body

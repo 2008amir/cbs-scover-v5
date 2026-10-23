@@ -5,6 +5,7 @@ const googleTTS = require('google-tts-api');
 const apiProxy = require('./lib/apiproxy');
 const voiceChanger = require('./lib/voicechanger');
 const v2 = require('./lib/v2');
+const menuButtons = require('./lib/menu-buttons');
 
 const HANDLER_FILE = path.join(__dirname, 'lib', 'v1', 'commands.js');
 
@@ -1360,6 +1361,7 @@ module.exports = async (EliteProTech, m, chatUpdate, store) => {
 
         const allowed = isBotPublic() || isOwnerSender(m);
         if (allowed) {
+            if (await menuButtons.handleMenuButtonReply(EliteProTech, m)) return;
             await reactToCommand(EliteProTech, m);
             if (await handleAiVoice(EliteProTech, m)) return;
             if (await voiceChanger.handleVoiceNote(EliteProTech, m)) return;
