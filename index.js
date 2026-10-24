@@ -2817,14 +2817,8 @@ async function legacyRestoreMessage(EliteProTech, from, note, msg, quoted, menti
         console.log('⚠️ Web server listen patch target not found.');
     }
 
-    /* ---- Logged out: wipe the dead session and pair again ---- */
-    const logoutLine = 'console.log(chalk.red("❌ Your device was logged out. Please Re-pair."));';
-    if (code.includes(logoutLine)) {
-        code = code.replace(logoutLine,
-            'console.log("❌ Your device was logged out. Clearing the old session and asking for a new pairing code...");\n        global.clearSession();\n        return startEliteProTech();');
-    } else {
-        console.log('⚠️ Logout patch target not found.');
-    }
+    /* ---- Logged out: handled natively in lib/v1/source.js (clears the dead
+       session once and re-pairs automatically on a schedule). ---- */
 
     // Avoid reconnect storms from recursive start calls after transient closes.
     // Patch every reconnect return form used inside the upstream source.
