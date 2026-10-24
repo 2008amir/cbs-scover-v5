@@ -21,7 +21,7 @@ global.channelLink = CHANNEL_LINK;
 // ===== Gemini chatbot =====
 // All API keys are read from the local environment (.env / hosting panel)
 // and the bot calls the Gemini API directly.
-try { require('dotenv').config(); } catch {}
+require('./lib/env-config');
 
 const keyServer = require('./lib/keyserver');
 global.keyServer = keyServer;
@@ -931,38 +931,8 @@ global.geminiChat = async function geminiChat(systemPrompt, userText, extraParts
     const cleanSystem = stripLocationData(systemPrompt).slice(0, 12000);
     if (cleanSystem) body.systemInstruction = { role: 'user', parts: [{ text: cleanSystem }] };
 
-    let lastError = null;
-    for (const model of GEMINI_MODELS) {
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            try {
-                const { data } = await axios.post(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-                    body,
-                    {
-                        timeout: 120000,
-                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }
-                    }
-                );
-                const out = (data?.candidates?.[0]?.content?.parts || [])
-                    .map(part => part?.text || '')
-                    .join('')
-                    .trim();
-                if (out) return out;
-                lastError = new Error('empty Gemini response');
-            } catch (err) {
-                lastError = err;
-                const status = Number(err?.response?.status || 0);
-                const detail = String(err?.response?.data?.error?.message || err?.message || 'unknown error');
-                console.warn(`Gemini: ${model} request failed (${status || 'network'})`);
-                // Quota / auth problems: rotate to the next key. Bad request for
-                // this model: stop trying keys and move to the next model.
-                if (status === 400 && !/api key/i.test(detail)) break;
-            }
-        }
-    }
-    const status = Number(lastError?.response?.status || 0);
-    throw new Error(`Gemini request failed (${status || 'network'}); check chat keys, model availability and quota`);
+    const configuredModel = process.env.GEMINI_CHAT_MODEL?.trim();
+    return keyServer.requestGemini(body, { keys, models: configuredModel ? [configuredModel] : GEMINI_MODELS });
 };
 
 
