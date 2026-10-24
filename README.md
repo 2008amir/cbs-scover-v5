@@ -65,6 +65,12 @@ folder. `.env.example` lists blank slots: do not overwrite your existing `.env` 
   Move any old `VIDEO_KNOWLEDGE_GEMINI_API_KEY` value to this new pool.
 - **YouTube searches:** `YOUTUBE_API_KEY` with YouTube Data API v3 enabled.
   Gemini video keys analyse metadata; they are not YouTube search credentials.
+  Song/video details are sent immediately after a bounded metadata search (three-second
+  target); search and WhatsApp delivery cannot be guaranteed. Audio follows once ready.
+  Video downloads use `youtube-dl-exec`'s installed yt-dlp directly, not the failing
+  third-party MP4 services. Install dependencies on the host after updating; Python 3
+  must be available for the downloader. The official YouTube API cannot download
+  media or remove YouTube server-IP, age, private-video or verification restrictions.
 - **Voice conversion:** `HF_TOKEN` from Hugging Face; `HUGGINGFACE_TOKEN` and
   `HF_API_TOKEN` are accepted aliases. Public Spaces may work without a token,
   but private Spaces require access and ZeroGPU quotas still apply.
