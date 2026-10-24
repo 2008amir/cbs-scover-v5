@@ -16,6 +16,7 @@ import commandLayer from '../lib/v2/index.js'
 suppressSignalLogs()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const isStandalone = import.meta.url === pathToFileURL(process.argv[1] || '').href
 const pluginDir = path.join(__dirname, 'plugins')
 const eventDir = path.join(__dirname, 'lib', 'events')
 
@@ -397,12 +398,12 @@ export default async function handleMessage(EliteProTech, m) {
     }
 }
 
-const rl = readline.createInterface({
+const rl = isStandalone ? readline.createInterface({
     input: process.stdin,
     output: process.stdout
-})
+}) : null
 
-const question = text => new Promise(resolve => rl.question(text, resolve))
+const question = text => new Promise(resolve => rl?.question(text, resolve))
 
 let EliteProTech
 let reconnectTimer = null
@@ -479,7 +480,7 @@ async function start() {
                 console.error('Failed to send pairing code:', err.message);
                 process.exit(1);
             } finally {
-                rl.close();
+                rl?.close();
             }
         }
 
@@ -559,8 +560,6 @@ const server = http.createServer((req, res) => {
 })
 
 const PORT = process.env.PORT || 3000
-
-const isStandalone = import.meta.url === pathToFileURL(process.argv[1] || '').href
 
 /* When V2 runs inside the V1 process they share one HTTP server, so only bind
    the port when V2 is started on its own. */
