@@ -99,6 +99,21 @@ Official references:
 ---
 
 ## FOR PANEL DEPLOYMENT
+Run `npm start` with Node.js 22 or newer. Startup now runs one bot process,
+not a second nested copy. The existing 320 MB V8 heap ceiling does not limit
+total memory: media buffers and native libraries also count against the panel's
+RAM allocation. Do not raise the heap ceiling without checking the plan limit.
+
+The console prints `[HOST]` memory/uptime readings every five minutes and logs
+host shutdown signals and normal exit codes. If the server stops, save the last
+console lines and the panel's termination reason: `137`/`SIGKILL` can indicate
+a forced kill (check the panel's OOM flag), `143`/`SIGTERM` indicates a requested
+stop, and `JavaScript heap out of memory` indicates Node's heap ceiling. SIGKILL
+and container-wide OOM kills cannot be caught or restarted from inside the bot.
+Panel sleep schedules, expired hosting credit and suspension require changes
+in the panel; configure its automatic crash restart if available. A keep-alive
+page cannot override those policies or guarantee year-long uptime.
+
 - Click on **[DOWNLOAD](https://github.com/codebreakers/CBS-SCOVER/archive/refs/heads/main.zip)** to get zip file🗃.
 - Create a server on your panel
 - Upload zip file 🗃️

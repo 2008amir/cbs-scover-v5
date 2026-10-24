@@ -1,5 +1,6 @@
 # Architecture
 - This repository runs a standalone Node.js Baileys bot; V1 and V2 share one WhatsApp socket.
+- index.js owns the only bot process; evaluated V1 source must never spawn index.js again. Let the hosting panel restart processes, honor stop signals, and log numerical host resource diagnostics to distinguish external kills from socket failures.
 - Keep shared prefix and automation aliases in lib/env-config.js backed by lib/database/settings.json; V2 must not overwrite V1 settings on import, so commands stay consistent across engines and restarts.
 - Remove exact V1 spellings from V2 handler.command arrays without deleting plugin files; discover routing/menu ownership from actual V1 handlers, not a static denylist, to preserve unique V2 aliases.
 - Wire V2 events once per socket and let V1 own shared automation events in merged mode, preventing duplicate status receipts and reactions.
