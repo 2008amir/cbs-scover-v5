@@ -54,12 +54,14 @@ The bot loads the repository's `.env` even when launched from another directory.
 Hosting-panel values take precedence. Restart after changing keys; keep your session
 folder. `.env.example` lists blank slots: do not overwrite your existing `.env` with it.
 
-- **Chat:** `GEMINI_API_KEY` and `GEMINI_KEY_2` through `GEMINI_KEY_5`.
+- **Chat:** `GEMINI_API_KEY` (or `GEMINI_KEY_1`) and `GEMINI_KEY_2` through `GEMINI_KEY_5`.
+  `GOOGLE_API_KEY` is accepted only when the first chat slot is empty.
+  `GEMINI_CHAT_MODEL` overrides the chat model; `GEMINI_VIDEO_MODEL` overrides video analysis.
 - **Image generation:** `IMAGE_GEMINI_KEY_1` through `IMAGE_GEMINI_KEY_5`
   (`IMAGE_GEMINI_KEY` is accepted as slot 1). This pool is separate from chat and
   video keys and never borrows them. `IMAGE_GEMINI_MODEL` overrides the model id
   (default: `gemini-3.1-flash-image`, the Flash 3 image model).
-- **Video analysis only:** `GEMINI_youtube_KEY` and `GEMINI_youtube_KEY_2` through
+- **Video analysis only:** `GEMINI_YOUTUBE_KEY_1` through `GEMINI_YOUTUBE_KEY_5`, or `GEMINI_youtube_KEY` and `GEMINI_youtube_KEY_2` through
   `GEMINI_youtube_KEY_5`. Hyphen aliases (`GEMINI_youtube_KEY-2` through `-5`) and
   legacy uppercase names also work. This pool never borrows chat keys.
   Move any old `VIDEO_KNOWLEDGE_GEMINI_API_KEY` value to this new pool.
@@ -83,6 +85,8 @@ quota and model availability can still cause provider errors; configuration cann
 override them. A different Seed-VC Space must offer the same `/predict` schema.
 
 Official references:
+- **Authorization recovery (checked October 24, 2026):** Google now rejects unrestricted standard Gemini keys; restrict them to the Generative Language API or create new auth keys in AI Studio. Blocked, leaked, invalid or revoked keys need replacement. New AI Studio keys default to auth keys. Check the linked service account, enabled API and server-IP restrictions if access still fails. Update the hosting panel too: old panel values override replacement values in `.env`. Restart without deleting the WhatsApp session. See [current AI Studio key guidance](https://aistudio.google.com/docs/api-key).
+- A Hugging Face `401` from `/api/whoami-v2` means the configured token is not accepted; replace it in [token settings](https://huggingface.co/settings/tokens). A valid token must also have access to the selected Seed-VC Space. This bot uses Gradio Spaces, not the retired serverless inference hostname; changing to the Inference Providers router would not fix its voice conversion. Inference Providers permissions apply only if using that separate API.
 - [Gemini keys](https://ai.google.dev/gemini-api/docs/api-key)
 - [YouTube API setup](https://developers.google.com/youtube/v3/getting-started)
 - [Hugging Face tokens](https://huggingface.co/docs/hub/security-tokens)
