@@ -3013,9 +3013,23 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (err) => {
     console.log('⚠️ Unhandled rejection (ignored):', err?.message || err);
 });
-process.on('SIGTERM', () => console.log('ℹ️ SIGTERM received, staying online.'));
-process.on('SIGHUP', () => console.log('ℹ️ SIGHUP received, staying online.'));
-process.on('SIGQUIT', () => console.log('ℹ️ SIGQUIT received, staying online.'));
+// A panel stop cannot be prevented by swallowing its signal. Record the cause
+// and respect shutdown so a restart does not leave overlapping bot instances.
+let shuttingDown = false;
+function shutdownForPanel(signal, exitCode) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[HOST] ${signal} received from host/process manager; ${maintenance.resourceSummary()}`);
+    if (global.__v1ReconnectTimer) clearTimeout(global.__v1ReconnectTimer);
+    try { global.connectionHealth?.dispose(); } catch {}
+    stopKeepAlive();
+    process.exit(exitCode);
+}
+process.on('SIGTERM', () => shutdownForPanel('SIGTERM', 143));
+process.on('SIGINT', () => shutdownForPanel('SIGINT', 130));
+process.on('SIGHUP', () => shutdownForPanel('SIGHUP', 129));
+process.on('SIGQUIT', () => shutdownForPanel('SIGQUIT', 131));
+process.on('exit', code => console.log(`[HOST] Process exit code=${code}; ${maintenance.resourceSummary()}`));
 process.on('SIGUSR1', () => {});
 process.on('SIGUSR2', () => {});
 process.on('beforeExit', () => console.log('ℹ️ Event loop drained, keeping the process running.'));
@@ -3049,6 +3063,8 @@ function cleanTempDirs() {
 }
 
 function startMaintenance() {
+    console.log(`[HOST] Single bot process pid=${process.pid}; ${maintenance.resourceSummary()}`);
+    setInterval(() => console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; ${maintenance.resourceSummary()}`), 5 * 60 * 1000);
     setInterval(cleanTempDirs, 15 * 60 * 1000);
     // Quietly re-apply the hard caps to every long-lived memory structure.
     setInterval(() => {
