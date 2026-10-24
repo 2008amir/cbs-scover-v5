@@ -69,6 +69,10 @@ folder. `.env.example` lists blank slots: do not overwrite your existing `.env` 
   Gemini video keys analyse metadata; they are not YouTube search credentials.
   Song/video details are sent immediately after a bounded metadata search (three-second
   target); search and WhatsApp delivery cannot be guaranteed. Audio follows once ready.
+  `.video <title>` searches Dailymotion; unrelated results are rejected. `.video` also
+  accepts public Dailymotion (`dai.ly` included) and YouTube links. `.ytmp4` retains
+  YouTube title search. Music/`.play` providers are unchanged. Source catalogs differ:
+  a song missing from Dailymotion requires a public matching video link.
   Video downloads use `youtube-dl-exec`'s installed yt-dlp directly, not the failing
   third-party MP4 services. Install dependencies on the host after updating; Python 3
   must be available for the downloader. The official YouTube API cannot download
