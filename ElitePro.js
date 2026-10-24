@@ -1332,6 +1332,22 @@ const COMMAND_REACTIONS = {
 };
 const reacted = new Set();
 
+/* Commands handled outside the V1 switch and V2 plugins, so they still count
+   as known commands. */
+const EXTRA_KNOWN_COMMANDS = [
+    'chatbot', 'chatbot-love', 'chatbotlove', 'chatbot-friend', 'chatbotfriend',
+    'chatbot-love-start', 'chatbotlovestart', 'chatbot-lovestart',
+    'voicehelp', 'addvoice', 'voices', 'delvoice', 'renamevoice', 'voicechanger'
+];
+let knownCommands = null;
+function knownCommandSet() {
+    if (!knownCommands) {
+        knownCommands = v2.v1CommandNames();
+        for (const extra of EXTRA_KNOWN_COMMANDS) knownCommands.add(extra);
+    }
+    return knownCommands;
+}
+
 async function reactToCommand(EliteProTech, m) {
     try {
         const prefix = global.prefix ?? '.';
@@ -1339,6 +1355,9 @@ async function reactToCommand(EliteProTech, m) {
         if (!body || !body.startsWith(prefix) || body[prefix.length] === ' ') return;
         const command = body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase();
         if (!command) return;
+
+        /* Unknown commands get no reaction at all. */
+        if (!knownCommandSet().has(command) && !(await v2.owns(command))) return;
 
         const id = `${m.chat}|${m.key?.id}`;
         if (reacted.has(id)) return;
