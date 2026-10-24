@@ -1332,32 +1332,11 @@ const COMMAND_REACTIONS = {
 };
 const reacted = new Set();
 
-/* Commands handled outside the V1 switch and V2 plugins, so they still count
-   as known commands. */
-const EXTRA_KNOWN_COMMANDS = [
-    'chatbot', 'chatbot-love', 'chatbotlove', 'chatbot-friend', 'chatbotfriend',
-    'chatbot-love-start', 'chatbotlovestart', 'chatbot-lovestart',
-    'voicehelp', 'addvoice', 'voices', 'delvoice', 'renamevoice', 'voicechanger'
-];
-let knownCommands = null;
-function knownCommandSet() {
-    if (!knownCommands) {
-        knownCommands = v2.v1CommandNames();
-        for (const extra of EXTRA_KNOWN_COMMANDS) knownCommands.add(extra);
-    }
-    return knownCommands;
-}
-
 async function reactToCommand(EliteProTech, m) {
     try {
-        const prefix = global.prefix ?? '.';
-        const body = extractBody(m);
-        if (!body || !body.startsWith(prefix) || body[prefix.length] === ' ') return;
-        const command = body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase();
-        if (!command) return;
-
-        /* Unknown commands get no reaction at all. */
-        if (!knownCommandSet().has(command) && !(await v2.owns(command))) return;
+        const parsed = v2.parseCommand(v2.messageText(m));
+        if (!parsed || !(await v2.isKnownCommand(parsed.command))) return;
+        const { command } = parsed;
 
         const id = `${m.chat}|${m.key?.id}`;
         if (reacted.has(id)) return;
@@ -1372,6 +1351,7 @@ async function reactToCommand(EliteProTech, m) {
 
 module.exports = async (EliteProTech, m, chatUpdate, store) => {
     try {
+        if (!v2.claimMessage(EliteProTech, m)) return;
         rememberViewOnce(m);
         /* Initialize before parsing, including replacement sockets. */
         await v2.init(EliteProTech);
@@ -1381,7 +1361,12 @@ module.exports = async (EliteProTech, m, chatUpdate, store) => {
         const allowed = isBotPublic() || isOwnerSender(m);
         if (allowed) {
             if (await menuButtons.handleMenuButtonReply(EliteProTech, m)) return;
+            const body = v2.messageText(m);
+            const parsed = v2.parseCommand(body);
+            if (body.startsWith(global.prefix ?? '.') && (!parsed || !(await v2.isKnownCommand(parsed.command)))) return;
             await reactToCommand(EliteProTech, m);
+            // Chatbot controls have one owner, not the archive side listener.
+            if (parsed && await global.chatbotCommand?.(EliteProTech, m, body)) return;
             if (await handleAiVoice(EliteProTech, m)) return;
             if (await voiceChanger.handleVoiceNote(EliteProTech, m)) return;
             if (await handleExtraCommands(EliteProTech, m)) return;

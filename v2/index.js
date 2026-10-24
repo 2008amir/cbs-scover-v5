@@ -11,10 +11,12 @@ import { smsg, makeWASocket, bind, sendNotification, getGroupMetadata } from './
 import { suppressSignalLogs } from './lib/filter.js'
 import './config.js'
 import menuButtons from '../lib/menu-buttons.js'
+import commandLayer from '../lib/v2/index.js'
 
 suppressSignalLogs()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const isStandalone = import.meta.url === pathToFileURL(process.argv[1] || '').href
 const pluginDir = path.join(__dirname, 'plugins')
 const eventDir = path.join(__dirname, 'lib', 'events')
 
@@ -278,6 +280,8 @@ function extractCommandFromMessage(m) {
 
 export default async function handleMessage(EliteProTech, m) {
     try {
+        // Merged dispatch is claimed by ElitePro; standalone V2 claims here.
+        if (!global.botname && !commandLayer.claimMessage(EliteProTech, m)) return
         // Native menu replies are data, not commands; preserve their exact text.
         if (menuButtons.buttonResponse(m)) {
             if (global.botMode === 'self' && !m.fromMe && !m.isOwner) return
@@ -394,12 +398,12 @@ export default async function handleMessage(EliteProTech, m) {
     }
 }
 
-const rl = readline.createInterface({
+const rl = isStandalone ? readline.createInterface({
     input: process.stdin,
     output: process.stdout
-})
+}) : null
 
-const question = text => new Promise(resolve => rl.question(text, resolve))
+const question = text => new Promise(resolve => rl?.question(text, resolve))
 
 let EliteProTech
 let reconnectTimer = null
@@ -476,7 +480,7 @@ async function start() {
                 console.error('Failed to send pairing code:', err.message);
                 process.exit(1);
             } finally {
-                rl.close();
+                rl?.close();
             }
         }
 
@@ -556,8 +560,6 @@ const server = http.createServer((req, res) => {
 })
 
 const PORT = process.env.PORT || 3000
-
-const isStandalone = import.meta.url === pathToFileURL(process.argv[1] || '').href
 
 /* When V2 runs inside the V1 process they share one HTTP server, so only bind
    the port when V2 is started on its own. */

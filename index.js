@@ -1375,9 +1375,9 @@ ${archiveBlock(target)}`.trim();
 
 // Returns true when the message was a chatbot control command handled here.
 global.chatbotCommand = async function chatbotCommand(EliteProTech, mek, body) {
-    const prefix = global.prefix || '.';
+    const prefix = global.prefix ?? '.';
     const raw = String(body || '').trim();
-    if (!raw.startsWith(prefix)) return false;
+    if (!require('./lib/v2').parseCommand(raw, prefix)) return false;
     const parts = raw.slice(prefix.length).trim().split(/\s+/);
     const cmd = (parts.shift() || '').toLowerCase();
 
@@ -1550,16 +1550,9 @@ global.chatbotSideChannel = async function chatbotSideChannel(EliteProTech, mek)
         if (seenSide.size > 800) seenSide.clear();
 
         const trimmed = extractText(mek).trim();
-        const isCommand = trimmed.startsWith(global.prefix || '.');
-
-        if (isCommand) {
-            try {
-                return await global.chatbotCommand(EliteProTech, mek, trimmed);
-            } catch (err) {
-                await reportChatbotError(EliteProTech, from, mek, chatbotMode(from), err);
-                return true;
-            }
-        }
+        const isCommand = trimmed.startsWith(global.prefix ?? '.');
+        // Archive-only listener: command controls execute in ElitePro once.
+        if (isCommand) return false;
 
         // Log every message in the chat — incoming and the owner's own outgoing
         // ones — so a personality switched on later already knows the whole
@@ -1572,9 +1565,10 @@ global.chatbotSideChannel = async function chatbotSideChannel(EliteProTech, mek)
     }
 };
 
+const sideChannelSockets = new WeakSet();
 function hookSideChannel(EliteProTech) {
-    if (global.__chatbotSideHooked || !EliteProTech?.ev) return;
-    global.__chatbotSideHooked = true;
+    if (!EliteProTech?.ev || sideChannelSockets.has(EliteProTech)) return;
+    sideChannelSockets.add(EliteProTech);
     EliteProTech.ev.on('messages.upsert', async ({ messages }) => {
         for (const m of messages || []) await global.chatbotSideChannel(EliteProTech, m);
     });
