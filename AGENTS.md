@@ -4,6 +4,7 @@
 - Keep shared prefix and automation aliases in lib/env-config.js backed by lib/database/settings.json; V2 must not overwrite V1 settings on import, so commands stay consistent across engines and restarts.
 - Remove exact V1 spellings from V2 handler.command arrays without deleting plugin files; discover routing/menu ownership from actual V1 handlers, not a static denylist, to preserve unique V2 aliases.
 - Wire V2 events once per socket and let V1 own shared automation events in merged mode, preventing duplicate status receipts and reactions.
+- Keep prefix parsing, command recognition and bounded account/chat/message dispatch claims in lib/v2/index.js; all generic reactions defer prefixed input to the registered-command handler, and chatbot side listeners only archive so each command has one execution owner.
 - Keep Unicode font transforms and per-linked-account activation in lib/fonts.js using the existing settings store; attach once to the shared socket, preserve commands/URLs/mentions/code, and only edit recent fromMe text messages to avoid modifying other users or old history.
 - Resolve copied font previews through the shared font registry so command selection and displayed styles stay consistent; suppress successful plugin registration logs while retaining load failures.
 - Keep connection monitoring and socket-scoped timer disposal in lib/connection-health.js so reconnects do not accumulate background tasks.

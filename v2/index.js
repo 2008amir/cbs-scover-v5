@@ -11,6 +11,7 @@ import { smsg, makeWASocket, bind, sendNotification, getGroupMetadata } from './
 import { suppressSignalLogs } from './lib/filter.js'
 import './config.js'
 import menuButtons from '../lib/menu-buttons.js'
+import commandLayer from '../lib/v2/index.js'
 
 suppressSignalLogs()
 
@@ -278,6 +279,8 @@ function extractCommandFromMessage(m) {
 
 export default async function handleMessage(EliteProTech, m) {
     try {
+        // Merged dispatch is claimed by ElitePro; standalone V2 claims here.
+        if (!global.botname && !commandLayer.claimMessage(EliteProTech, m)) return
         // Native menu replies are data, not commands; preserve their exact text.
         if (menuButtons.buttonResponse(m)) {
             if (global.botMode === 'self' && !m.fromMe && !m.isOwner) return
