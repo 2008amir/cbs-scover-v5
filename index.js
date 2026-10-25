@@ -24,6 +24,8 @@ global.channelLink = CHANNEL_LINK;
 require('./lib/env-config');
 
 const keyServer = require('./lib/keyserver');
+global.reportError = keyServer.reportError;
+global.exactError = keyServer.exactError;
 global.keyServer = keyServer;
 
 // Primary → fallback chain.
