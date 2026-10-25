@@ -1,6 +1,10 @@
 import path from 'path';
 import fs from 'fs';
-import { fileTypeFromBuffer } from 'file-type';
+import * as fileTypeModule from 'file-type';
+
+// V2 shares the root file-type install (fromBuffer on v16, fileTypeFromBuffer on newer).
+const fileTypeFromBuffer = fileTypeModule.fileTypeFromBuffer || fileTypeModule.fromBuffer
+    || fileTypeModule.default?.fileTypeFromBuffer || fileTypeModule.default?.fromBuffer;
 import * as baileys from '@whiskeysockets/baileys';
 
 let _makeWaSocket = baileys.default;
