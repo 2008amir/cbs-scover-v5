@@ -772,7 +772,9 @@ LANGUAGE STYLE (background guess from the latest message + recent chat: ${lang})
 CURRENT PERSONALITY: ${mode === 'lovestart' ? 'LOVE_START' : mode.toUpperCase()}
 CURRENT CONVERSATION TOPIC (most recent lines): ${topicLine}
 
-- The latest message outranks everything older. Never let old history make you answer a topic they have already moved past.
+- Interpret the latest message in the conversation, not in isolation. A short answer (a number, yes/no, a name or an emoji) usually answers your last question; it is not a new conversation.
+- If you asked how many pages a book has and they answer "200", acknowledge the book has 200 pages and continue that topic. Do not ask the same question again or interpret 200 as a new topic.
+- Change topics only when their message clearly does so. Never let unrelated old history override that change.
 - If it is a direct question, answer that question first. If it is a statement, react to the statement first.
 ${timeGreetingBlock()}
 
@@ -799,7 +801,7 @@ BEFORE SENDING, CHECK SILENTLY
 Then send ONE natural reply. Never answer mechanically, and never fall back on a generic reply just because the message was short.
 `;
 
-    return `
+    return `${priority}
 
 You are ${name}, a highly natural WhatsApp conversational companion.
 
@@ -917,7 +919,26 @@ function stripLocationData(input) {
         .replace(/\n{3,}/g, '\n\n');
 }
 
-global.geminiChat = async function geminiChat(systemPrompt, userText, extraParts) {
+// Real conversational turns travel separately from the long personality prompt,
+// which can be truncated before reaching its appended history.
+function conversationTurns(history) {
+    const turns = String(history || '').split(/^(?=(?:User|Bot|Them|You): )/m)
+        .map(line => {
+            const match = /^(User|Bot|Them|You): ([\s\S]*)$/.exec(line.trim());
+            return match ? { role: /^(Bot|You)$/.test(match[1]) ? 'model' : 'user',
+                parts: [{ text: stripLocationData(match[2]).slice(0, 1000) }] } : null;
+        }).filter(turn => turn?.parts[0].text).slice(-20);
+    let chars = 0;
+    const recent = [];
+    for (const turn of turns.reverse()) {
+        chars += turn.parts[0].text.length;
+        if (chars > 6000) break;
+        recent.unshift(turn);
+    }
+    return recent;
+}
+
+global.geminiChat = async function geminiChat(systemPrompt, userText, extraParts, priorHistory) {
     const parts = [];
     const text = stripLocationData(userText).slice(0, 6000);
     if (text) parts.push({ text });
@@ -934,7 +955,7 @@ global.geminiChat = async function geminiChat(systemPrompt, userText, extraParts
     if (!keys.length) throw new Error('No Gemini API key is configured in .env.');
 
     const body = {
-        contents: [{ role: 'user', parts }],
+        contents: [...conversationTurns(priorHistory), { role: 'user', parts }],
         generationConfig: { temperature: 0.95, topP: 0.95, maxOutputTokens: 800 }
     };
     const cleanSystem = stripLocationData(systemPrompt).slice(0, 12000);
@@ -1068,20 +1089,26 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
 
     global.userChats = global.userChats || {};
     global.userChatTimestamps = global.userChatTimestamps || {};
-    global.userChats[sender] = global.userChats[sender] || [];
-    global.userChatTimestamps[sender] = Date.now();
+    const historyKey = `${from}|${sender}`;
+    // The durable DM archive includes the bot's own questions and survives
+    // restarts / short-term cache expiry. Groups keep participant threads apart.
+    const archived = !from.endsWith('@g.us') ? (global.chatArchive?.[from] || []) : [];
+    const previous = archived.length ? archived : (global.userChats[historyKey] || []);
+    global.userChats[historyKey] = previous.slice(-20);
+    const priorHistory = global.userChats[historyKey].join('\n');
+    global.userChatTimestamps[historyKey] = Date.now();
     const userLine = texts.length > 1
         ? texts.map((t, i) => `(${i + 1}) ${t}`).join('\n')
         : (combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
-    global.userChats[sender].push(`User: ${userLine}`);
-    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
+    global.userChats[historyKey].push(`User: ${userLine}`);
+    while (global.userChats[historyKey].length > 20) global.userChats[historyKey].shift();
 
     learnStyle(sender, combined || '');
     rememberFacts(sender, combined || '');
     global.logChatMessage(from, 'Them', combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
 
 
-    const history = global.userChats[sender].join('\n').slice(-4000);
+    const history = global.userChats[historyKey].join('\n').slice(-4000);
     const mode = chatbotMode(from);
     const gender = chatbotGender(from);
     const exchanges = (global.chatArchive?.[from] || []).length;
@@ -1107,7 +1134,7 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
 
     // A failure here throws: nothing is sent to the chat, the caller logs it and
     // DMs the exact error to the owner.
-    const reply = await global.geminiChat(prompt, spoken, mediaParts);
+    const reply = await global.geminiChat(prompt, spoken, mediaParts, priorHistory);
 
     // The model itself can decide the message needs a real human — then nothing
     // is sent and the chat simply stays quiet.
@@ -1120,11 +1147,10 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
 // Random 1/2/3 s pause, then typing for exactly characters × 0.3 s.
     await pauseThenType(EliteProTech, from, clean);
 
-    global.userChats[sender].push(`Bot: ${clean}`);
-    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
-    global.logChatMessage(from, 'You', clean);
-
     await EliteProTech.sendMessage(from, { text: clean }, { quoted: mek });
+    global.userChats[historyKey].push(`Bot: ${clean}`);
+    while (global.userChats[historyKey].length > 20) global.userChats[historyKey].shift();
+    global.logChatMessage(from, 'You', clean);
 }
 
 /* ---- human-only requests -------------------------------------------------
@@ -1671,6 +1697,10 @@ global.humanChatbot = async function humanChatbot(EliteProTech, mek) {
         const waitWindow = stillTyping ? 9000 : 2500;
 
         const flush = async () => {
+            buf.timer = null;
+            // A follow-up must wait until the previous reply is actually sent
+            // and recorded. Its existing buffer is drained by that job's finally.
+            if (buf.running) return;
             // Still typing when the window expired? give them a bit more time.
             if (Date.now() - (global.typingUsers[sender] || 0) < 6000) {
                 buf.timer = setTimeout(flush, 4000);
@@ -1686,12 +1716,22 @@ global.humanChatbot = async function humanChatbot(EliteProTech, mek) {
             buf.images = [];
             buf.video = false;
             buf.timer = null;
+            buf.running = true;
             try {
                 await generateAndSend(EliteProTech, from, sender, last, texts, audio, images, video);
             } catch (err) {
                 // The target chat gets no reply; the exact error goes to the log
                 // and to the owner's DM only.
                 await reportChatbotError(EliteProTech, from, last, chatbotMode(from), err);
+            } finally {
+                buf.running = false;
+                if (!buf.timer) {
+                    if (buf.texts.length || buf.audio.length || buf.images.length || buf.video) {
+                        buf.timer = setTimeout(flush, 0);
+                    } else if (global.chatBuffers[bufKey] === buf) {
+                        delete global.chatBuffers[bufKey];
+                    }
+                }
             }
         };
         buf.timer = setTimeout(flush, waitWindow);
