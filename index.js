@@ -3060,15 +3060,6 @@ function startMaintenance() {
     console.log(`[HOST] Single bot process pid=${process.pid}; ${maintenance.resourceSummary()}`);
     setInterval(() => console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; ${maintenance.resourceSummary()}`), 5 * 60 * 1000);
     setInterval(cleanTempDirs, 15 * 60 * 1000);
-    // Keep the bot folder within the hosting disk budget (disposable files only).
-    const diskCheck = () => {
-        try {
-            const { usedMb, freedMb, limitMb } = require('./lib/disk-budget').enforceDiskBudget();
-            if (freedMb || usedMb > limitMb) console.log(`[DISK] bot folder ${usedMb}MB of ${limitMb}MB; freed ${freedMb}MB`);
-        } catch {}
-    };
-    setTimeout(diskCheck, 60 * 1000);
-    setInterval(diskCheck, 60 * 60 * 1000);
     // Quietly re-apply the hard caps to every long-lived memory structure.
     setInterval(() => {
         try { maintenance.boundChatArchive(global.chatArchive); } catch {}

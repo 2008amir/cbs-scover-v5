@@ -1,8 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import * as FileTypeModule from 'file-type';
-// V2 shares the root install: newer file-type exports fileTypeFromBuffer, older ones fromBuffer.
-const fileTypeFromBuffer = FileTypeModule.fileTypeFromBuffer || FileTypeModule.fromBuffer || FileTypeModule.default?.fromBuffer;
+import { fileTypeFromBuffer } from 'file-type';
 import * as baileys from '@whiskeysockets/baileys';
 
 let _makeWaSocket = baileys.default;
