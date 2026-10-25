@@ -24,6 +24,8 @@ global.channelLink = CHANNEL_LINK;
 require('./lib/env-config');
 
 const keyServer = require('./lib/keyserver');
+global.reportError = keyServer.reportError;
+global.exactError = keyServer.exactError;
 global.keyServer = keyServer;
 
 // Primary → fallback chain.
@@ -753,8 +755,17 @@ global.buildChatbotPrompt = function buildChatbotPrompt(history, pushName, sende
     const mode = String(opts?.mode || 'normal');
     const topicLine = recentLines.filter(Boolean).slice(-6).join(' | ').slice(-500) || 'nothing yet';
     const facts = (global.chatFacts[sender] || []).join('; ') || 'nothing yet';
-    const priority = `
-LATEST MESSAGE — HIGHEST PRIORITY (answer THIS)
+    // Find the bot's last turn so an answer to its own question is treated as a reply, not a new chat.
+    const lastBot = [...recentLines].reverse().find(line => /^Bot:/.test(line));
+    const pendingQuestion = lastBot && /\?|\bko\b|\bwane\b|\bnawa\b|\byaya\b/i.test(lastBot) ? lastBot.replace(/^Bot:\s*/, '') : '';
+    const followUp = pendingQuestion ? `
+YOUR PREVIOUS MESSAGE (you asked this — it is still open)
+${pendingQuestion}
+- Their latest message is most likely THEIR ANSWER to your question above. Treat it as the answer: acknowledge or use it (e.g. you asked how many pages a book has, they said "200" -> respond to 200 pages of that book), then carry the same topic forward.
+- Never treat that answer as a brand-new conversation, never re-ask the same question, and never forget what you asked.
+` : '';
+    const priority = `${followUp}
+LATEST MESSAGE — HIGHEST PRIORITY (answer THIS, in the context of the conversation above)
 ${latest || '(no text — media only)'}
 
 LANGUAGE STYLE (background guess from the latest message + recent chat: ${lang})
@@ -763,7 +774,7 @@ LANGUAGE STYLE (background guess from the latest message + recent chat: ${lang})
 CURRENT PERSONALITY: ${mode === 'lovestart' ? 'LOVE_START' : mode.toUpperCase()}
 CURRENT CONVERSATION TOPIC (most recent lines): ${topicLine}
 
-- The latest message outranks everything older. Never let old history make you answer a topic they have already moved past.
+- The latest message outranks everything older, but it CONTINUES the conversation: short replies like numbers, yes/no, names or one word are answers to what was just asked. Only switch topic when they clearly changed it.
 - If it is a direct question, answer that question first. If it is a statement, react to the statement first.
 ${timeGreetingBlock()}
 
