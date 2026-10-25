@@ -3045,29 +3045,11 @@ setInterval(() => {}, 60000);
 
 /* Quiet maintenance only; never clear live state based on process RSS. */
 function cleanTempDirs() {
-    const dirs = [
-        path.join(__dirname, 'database', 'temp'),
-        path.join(__dirname, 'lib', 'database', 'temp'),
-        path.join(__dirname, 'v2', 'lib', 'database', 'temp'),
-        require('os').tmpdir()
-    ];
-    const now = Date.now();
-    for (const dir of dirs) {
-        try {
-            for (const name of fs.readdirSync(dir)) {
-                const file = path.join(dir, name);
-                try {
-                    const stat = fs.statSync(file);
-                    if (!stat.isFile()) continue;
-                    if (!/\.(ogg|opus|mp3|mp4|wav|webp|jpg|jpeg|png|pcm|tmp|webm|m4a)$/i.test(name)) continue;
-                    if (now - stat.mtimeMs > 30 * 60 * 1000) fs.unlinkSync(file);
-                } catch {}
-            }
-        } catch {}
-    }
+    maintenance.expireTempFiles(__dirname);
 }
 
 function startMaintenance() {
+    cleanTempDirs();
     console.log(`[HOST] Single bot process pid=${process.pid}; ${maintenance.resourceSummary()}`);
     setInterval(() => console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; ${maintenance.resourceSummary()}`), 5 * 60 * 1000);
     setInterval(cleanTempDirs, 15 * 60 * 1000);
