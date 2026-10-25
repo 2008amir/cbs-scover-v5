@@ -9,7 +9,7 @@
     "dev": "node -e \"const http=require('http'),fs=require('fs');const html=fs.readFileSync('lib/index.html');http.createServer((q,s)=>{s.writeHead(200,{'Content-Type':'text/html'});s.end(html)}).listen(process.env.PORT||8080,()=>console.log('preview server ready'))\" --",
     "build:dev": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('lib/index.html','dist/index.html')\"",
     "build": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('lib/index.html','dist/index.html')\"",
-    "postinstall": "npm --prefix v2 install --omit=dev --no-audit --no-fund --legacy-peer-deps || true"
+    "postinstall": "node lib/disk-budget.js --prune || true"
   },
   "author": "cyrilix",
   "license": "MIT",
@@ -26,6 +26,7 @@
     "cheerio": "^1.0.0-rc.12",
     "docx": "^9.14.0",
     "dotenv": "^17.4.2",
+    "fflate": "^0.8.3",
     "file-type": "^16.5.3",
     "fluent-ffmpeg": "^2.1.2",
     "form-data": "^4.0.0",
@@ -44,7 +45,7 @@
     "performance-now": "^2.1.0",
     "pino": "^10.1.0",
     "qrcode": "^1.5.3",
-    "sharp": "^0.32.6",
+    "sharp": "^0.34.5",
     "translate-google-api": "^1.0.4",
     "youtube-dl-exec": "^3.1.17",
     "yt-search": "^2.10.4"
