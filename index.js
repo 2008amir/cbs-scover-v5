@@ -1,3 +1,18 @@
+// Self-heal for hosting panels that never run `npm install`: if the
+// dependencies are missing, install them once before loading anything.
+try {
+    require.resolve('axios');
+} catch (missingDeps) {
+    try {
+        console.log('[BOOT] Dependencies missing — running npm install (one time)...');
+        require('child_process').execSync('npm install --omit=dev --no-audit --no-fund', {
+            stdio: 'inherit',
+            cwd: __dirname
+        });
+    } catch (installErr) {
+        console.error('[BOOT] npm install failed:', installErr && installErr.message);
+    }
+}
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
