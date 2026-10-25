@@ -2674,9 +2674,11 @@ global.scheduleReconnect = function scheduleReconnect(reconnectFn, delay = 5000)
         if (global.__v1ReconnectInFlight) return global.scheduleReconnect(reconnectFn, nextDelay);
         global.__v1ReconnectInFlight = true;
         Promise.resolve()
-            .then(() => reconnectFn())
+            .then(() => { global.restoreSessionCreds(); return reconnectFn(); })
             .catch((e) => {
                 console.log('Reconnect failed:', e?.message || e);
+                // A full disk blocks every reconnect: clear safe junk, then retry.
+                if (maintenance.isNoSpace(e)) global.freeDiskSpace('no space left', true);
                 global.scheduleReconnect(reconnectFn, 10000);
             })
             .finally(() => {
@@ -3002,9 +3004,11 @@ function stopKeepAlive() {
 // Keeps the process alive under hosting panels: never exit on an unexpected
 // error, and make sure something is always listening on $PORT.
 process.on('uncaughtException', (err) => {
+    if (maintenance.isNoSpace(err)) global.freeDiskSpace('no space left', true);
     console.log('⚠️ Uncaught exception (ignored):', err?.stack || err?.message || err);
 });
 process.on('unhandledRejection', (err) => {
+    if (maintenance.isNoSpace(err)) global.freeDiskSpace('no space left', true);
     console.log('⚠️ Unhandled rejection (ignored):', err?.message || err);
 });
 // A panel stop cannot be prevented by swallowing its signal. Record the cause
@@ -3032,28 +3036,31 @@ process.on('beforeExit', () => console.log('ℹ️ Event loop drained, keeping t
 // never quit on its own after a disconnect.
 setInterval(() => {}, 60000);
 
-/* Quiet maintenance only; never clear live state based on process RSS. */
-function cleanTempDirs() {
-    const dirs = [
-        path.join(__dirname, 'database', 'temp'),
-        path.join(__dirname, 'lib', 'database', 'temp'),
-        path.join(__dirname, 'v2', 'lib', 'database', 'temp'),
-        require('os').tmpdir()
-    ];
+/* Quiet maintenance only; never clear live state based on process RSS.
+   Disk cleanup removes stale temporary output and package caches only; login
+   keys, installed packages and saved settings are never touched. */
+const SESSION_DIR = path.join(__dirname, 'session');
+let lastEmergencyClean = 0;
+global.freeDiskSpace = function freeDiskSpace(reason = 'scheduled', emergency = false) {
     const now = Date.now();
-    for (const dir of dirs) {
-        try {
-            for (const name of fs.readdirSync(dir)) {
-                const file = path.join(dir, name);
-                try {
-                    const stat = fs.statSync(file);
-                    if (!stat.isFile()) continue;
-                    if (!/\.(ogg|opus|mp3|mp4|wav|webp|jpg|jpeg|png|pcm|tmp|webm|m4a)$/i.test(name)) continue;
-                    if (now - stat.mtimeMs > 30 * 60 * 1000) fs.unlinkSync(file);
-                } catch {}
-            }
-        } catch {}
+    if (emergency && now - lastEmergencyClean < 60 * 1000) return null;
+    if (emergency) lastEmergencyClean = now;
+    let result = { removed: 0, freedBytes: 0 };
+    try { result = maintenance.freeDiskSpace({ root: __dirname, emergency }); } catch {}
+    try { global.purgeAntiDeleteStore?.(true); } catch {}
+    if (result.removed || emergency || reason === 'startup') {
+        console.log(`[DISK] ${reason}: removed ${result.removed} files (${Math.round(result.freedBytes / 1024 / 1024)}MB); ${maintenance.diskSummary(__dirname)}`);
     }
+    return result;
+};
+global.restoreSessionCreds = function restoreSessionCreds() {
+    try {
+        if (maintenance.restoreCreds(SESSION_DIR)) console.log('🔐 Login file was damaged; restored the last good copy.');
+    } catch {}
+};
+function cleanTempDirs() {
+    global.freeDiskSpace('scheduled');
+    try { maintenance.backupCreds(SESSION_DIR); } catch {}
 }
 
 function startMaintenance() {
@@ -3090,6 +3097,9 @@ function watchPort() {
 }
 
 async function start() {
+    // Free space and repair the login file before anything writes to disk.
+    global.freeDiskSpace('startup');
+    global.restoreSessionCreds();
     startKeepAlive();
     watchPort();
     startMaintenance();
