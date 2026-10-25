@@ -764,6 +764,7 @@ CURRENT PERSONALITY: ${mode === 'lovestart' ? 'LOVE_START' : mode.toUpperCase()}
 CURRENT CONVERSATION TOPIC (most recent lines): ${topicLine}
 
 - The latest message outranks everything older. Never let old history make you answer a topic they have already moved past.
+- ANSWERS TO YOUR OWN QUESTIONS (MANDATORY): look at your last "Bot:" line. If you asked something there, the latest message is almost always THEIR ANSWER to it — even if it is just a number, a name, "yes", "no" or one word. Treat it as that answer, acknowledge it in context (e.g. you asked "how many pages are in the book?" and they say "300" → react to 300 pages of that book) and carry the same conversation forward. Never treat such an answer as a new conversation and never ask the same question again.
 - If it is a direct question, answer that question first. If it is a statement, react to the statement first.
 ${timeGreetingBlock()}
 
@@ -1059,20 +1060,25 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
 
     global.userChats = global.userChats || {};
     global.userChatTimestamps = global.userChatTimestamps || {};
-    global.userChats[sender] = global.userChats[sender] || [];
+    // Memory follows the chat, not the address: WhatsApp can deliver one
+    // person under phone-number and LID senders, which split the history.
+    const memKey = String(from || sender);
+    if (!global.userChats[memKey] && global.userChats[sender]) global.userChats[memKey] = global.userChats[sender];
+    global.userChats[memKey] = global.userChats[memKey] || [];
+    sender = memKey;
     global.userChatTimestamps[sender] = Date.now();
     const userLine = texts.length > 1
         ? texts.map((t, i) => `(${i + 1}) ${t}`).join('\n')
         : (combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
     global.userChats[sender].push(`User: ${userLine}`);
-    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
+    while (global.userChats[sender].length > 40) global.userChats[sender].shift();
 
     learnStyle(sender, combined || '');
     rememberFacts(sender, combined || '');
     global.logChatMessage(from, 'Them', combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
 
 
-    const history = global.userChats[sender].join('\n').slice(-4000);
+    const history = global.userChats[sender].join('\n').slice(-6000);
     const mode = chatbotMode(from);
     const gender = chatbotGender(from);
     const exchanges = (global.chatArchive?.[from] || []).length;
@@ -1109,10 +1115,11 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
     }
 
 // Random 1/2/3 s pause, then typing for exactly characters × 0.3 s.
-    await pauseThenType(EliteProTech, from, clean);
-
+    // Remember the reply before typing starts, so an answer sent quickly
+    // still sees the question it answers.
     global.userChats[sender].push(`Bot: ${clean}`);
-    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
+    while (global.userChats[sender].length > 40) global.userChats[sender].shift();
+    await pauseThenType(EliteProTech, from, clean);
     global.logChatMessage(from, 'You', clean);
 
     await EliteProTech.sendMessage(from, { text: clean }, { quoted: mek });
