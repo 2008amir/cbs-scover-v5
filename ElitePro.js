@@ -144,7 +144,7 @@ async function handleAiVoice(EliteProTech, m) {
     const flags = [match[1], match[2]].filter(Boolean);
     let hausa = flags.includes('hausa');
     const gender = flags.includes('female') ? 'female' : 'male';
-    const reply = (text) => EliteProTech.sendMessage(m.chat, { text }, { quoted: m });
+    const reply = (text) => errorReporting.replyText(EliteProTech, m, text);
 
     let text = body.slice(prefix.length + command.length).trim();
     if (!text && m?.quoted?.text) text = String(m.quoted.text).trim();
@@ -199,8 +199,7 @@ async function handleAiVoice(EliteProTech, m) {
     } catch (err) {
         recording = false;
         await EliteProTech.sendPresenceUpdate('paused', m.chat).catch(() => {});
-        console.error('AIVoice Error:', err?.message || err);
-        await reply('❌ Failed to generate the voice note. Please try again.').catch(() => {});
+        await errorReporting.reportError(EliteProTech, m, err, 'AI voice');
     }
 
 
@@ -711,7 +710,7 @@ async function handleExtraCommands(EliteProTech, m) {
     const command = (rest.split(/\s+/)[0] || '').toLowerCase();
     const args = rest.slice(command.length).replace(/^[^\S\n]+/, '').replace(/^\n/, '').trim();
 
-    const reply = (text) => EliteProTech.sendMessage(m.chat, { text }, { quoted: m });
+    const reply = (text) => errorReporting.replyText(EliteProTech, m, text);
     const isGroupChat = String(m.chat || '').endsWith('@g.us');
 
     /* ---------- VOICE CHANGER (Seed-VC speech-to-speech) ---------- */
