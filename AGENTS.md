@@ -10,9 +10,8 @@
 - Keep connection monitoring and socket-scoped timer disposal in lib/connection-health.js so reconnects do not accumulate background tasks.
 - Never delete active Baileys authentication/encryption files during scheduled maintenance; only explicit logout may clear credentials.
 - Maintenance expires bounded caches by retention policy, not process RSS, to preserve active conversations and anti-delete recovery.
-- Install V2 as a root workspace with shared compatible dependencies; postinstall compaction may remove only known documentation/test/coverage artifacts and source maps, never runtime modules, credentials or saved user data. Temp expiry visits only bot-owned paths and skips symlinks and persistent image collections.
 - Load provider credentials through lib/env-config.js with a repository-relative .env path; keep Gemini chat, Gemini video analysis, image generation and YouTube search key pools separate so no service borrows another pool's credentials.
-- Centralize Gemini authorization classification and bounded text requests in lib/keyserver.js; rejected credentials must not be retried across models; user-facing exact errors go through exactError/reportError in lib/keyserver.js, which masks credentials, because raw provider errors can contain secrets.
+- Centralize Gemini authorization classification and bounded text requests in lib/keyserver.js; rejected credentials must not be retried across models, and Gemini/Hugging Face replies and logs must not expose raw provider errors because they can contain secrets.
 - Normalize voice environment settings in lib/voicechanger/env.js so invalid numerical settings never enter provider requests.
 - Bound every long-lived in-memory structure with a hard count cap in lib/maintenance.js (chat archive chats, learned style/facts people, connect chat list); unbounded growth over long uptimes caused host memory kills.
 - Keep image generation in lib/image-generation.js with bounded requests, validated image buffers, and sanitized errors; V1 is evaluated with the repository-root require.

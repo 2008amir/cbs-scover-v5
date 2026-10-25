@@ -99,30 +99,6 @@ Official references:
 ---
 
 ## FOR PANEL DEPLOYMENT
-### Storage below 300 MB
-
-V1 and V2 now install together as one npm workspace. Do not run a separate
-`npm install` inside `v2`: root installation supplies both engines while keeping
-different dependency versions where their APIs require them. Postinstall removes
-only disposable source maps and selected dependency documentation/test artifacts.
-A fresh Linux x64 npm installation measured approximately 247 MB before app/user
-data; the full local Bun checkout measured 224 MB. Other platforms may differ.
-
-For an existing oversized deployment, stop the bot, upload the updated source and
-root lockfile, delete **only** root `node_modules` and `v2/node_modules`, then run
-`npm install --omit=dev --no-audit --no-fund` from the bot root and restart with
-`npm start`. If the panel counts npm's download cache, clear it with
-`npm cache clean --force` after installation. Remove old uploaded ZIP archives
-only after confirming their contents are extracted. Never remove `.env`,
-`session`, saved voices, conversation files or the whole `database` folder.
-
-Abandoned bot conversion files expire after 30 minutes, including nested scratch
-folders; active recent files and saved PDF image collections are preserved.
-These savings do not impose a hard disk quota: saved data, simultaneous media
-jobs, panel logs, archives and caches can exceed the remaining headroom. Check
-the panel's total after reinstall; a strict 300 MB ceiling needs a host quota
-and may reject new downloads or saved data rather than delete existing data.
-
 Run `npm start` with Node.js 22 or newer. Startup now runs one bot process,
 not a second nested copy. The existing 320 MB V8 heap ceiling does not limit
 total memory: media buffers and native libraries also count against the panel's
