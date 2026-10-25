@@ -3059,6 +3059,8 @@ function cleanTempDirs() {
 function startMaintenance() {
     console.log(`[HOST] Single bot process pid=${process.pid}; ${maintenance.resourceSummary()}`);
     setInterval(() => console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; ${maintenance.resourceSummary()}`), 5 * 60 * 1000);
+    try { maintenance.trimStartupStorage(__dirname); } catch {}
+    cleanTempDirs();
     setInterval(cleanTempDirs, 15 * 60 * 1000);
     // Quietly re-apply the hard caps to every long-lived memory structure.
     setInterval(() => {
