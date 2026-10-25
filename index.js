@@ -1078,7 +1078,7 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
     global.logChatMessage(from, 'Them', combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
 
 
-    const history = global.userChats[sender].join('\n').slice(-4000);
+    const history = global.userChats[sender].join('\n').slice(-6000);
     const mode = chatbotMode(from);
     const gender = chatbotGender(from);
     const exchanges = (global.chatArchive?.[from] || []).length;
@@ -1115,10 +1115,11 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
     }
 
 // Random 1/2/3 s pause, then typing for exactly characters × 0.3 s.
-    await pauseThenType(EliteProTech, from, clean);
-
+    // Remember the reply before typing starts, so an answer sent quickly
+    // still sees the question it answers.
     global.userChats[sender].push(`Bot: ${clean}`);
-    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
+    while (global.userChats[sender].length > 40) global.userChats[sender].shift();
+    await pauseThenType(EliteProTech, from, clean);
     global.logChatMessage(from, 'You', clean);
 
     await EliteProTech.sendMessage(from, { text: clean }, { quoted: mek });
