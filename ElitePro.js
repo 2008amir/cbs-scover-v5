@@ -6,6 +6,7 @@ const apiProxy = require('./lib/apiproxy');
 const voiceChanger = require('./lib/voicechanger');
 const v2 = require('./lib/v2');
 const menuButtons = require('./lib/menu-buttons');
+const errorReporting = require('./lib/error-reporting');
 
 const HANDLER_FILE = path.join(__dirname, 'lib', 'v1', 'commands.js');
 
@@ -1350,6 +1351,7 @@ async function reactToCommand(EliteProTech, m) {
 
 
 module.exports = async (EliteProTech, m, chatUpdate, store) => {
+    return errorReporting.withErrorContext(EliteProTech, m, async () => {
     try {
         if (!v2.claimMessage(EliteProTech, m)) return;
         rememberViewOnce(m);
@@ -1380,14 +1382,15 @@ module.exports = async (EliteProTech, m, chatUpdate, store) => {
             // access/license host, so no external request is made at load time.
             const data = fs.readFileSync(HANDLER_FILE, 'utf8');
             const mod = { exports: {} };
-            eval(`(function(module,exports,require){\n${patchHandler(data, proxyBase)}\n})`)(mod, mod.exports, require);
+            eval(`(function(module,exports,require,console){\n${patchHandler(data, proxyBase)}\n})`)(mod, mod.exports, require, errorReporting.handlerConsole);
 
             if (typeof mod.exports !== 'function') throw new Error('Invalid local V1 command handler');
             cachedHandler = mod.exports;
         }
 
-        return cachedHandler(EliteProTech, m, chatUpdate, store);
+        return await cachedHandler(EliteProTech, m, chatUpdate, store);
     } catch (err) {
-        console.error('Handler error:', err.message);
+        await errorReporting.reportError(EliteProTech, m, err, 'Command');
     }
+    });
 };

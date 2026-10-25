@@ -12,6 +12,7 @@ import { suppressSignalLogs } from './lib/filter.js'
 import './config.js'
 import menuButtons from '../lib/menu-buttons.js'
 import commandLayer from '../lib/v2/index.js'
+import errorReporting from '../lib/error-reporting.js'
 
 suppressSignalLogs()
 
@@ -279,6 +280,7 @@ function extractCommandFromMessage(m) {
 }
 
 export default async function handleMessage(EliteProTech, m) {
+    return errorReporting.withErrorContext(EliteProTech, m, async () => {
     try {
         // Merged dispatch is claimed by ElitePro; standalone V2 claims here.
         if (!global.botname && !commandLayer.claimMessage(EliteProTech, m)) return
@@ -394,8 +396,9 @@ export default async function handleMessage(EliteProTech, m) {
             notifReply
         })
     } catch (e) {
-        console.error(e)
+        await errorReporting.reportError(EliteProTech, m, e, 'V2 command')
     }
+    })
 }
 
 const rl = isStandalone ? readline.createInterface({
