@@ -4,12 +4,15 @@
   "description": "A WhatsApp bot with rich features.",
   "main": "index.js",
   "type": "commonjs",
+  "private": true,
+  "workspaces": ["v2"],
   "scripts": {
     "start": "node --max-old-space-size=320 --expose-gc --optimize-for-size index.js",
     "dev": "node -e \"const http=require('http'),fs=require('fs');const html=fs.readFileSync('lib/index.html');http.createServer((q,s)=>{s.writeHead(200,{'Content-Type':'text/html'});s.end(html)}).listen(process.env.PORT||8080,()=>console.log('preview server ready'))\" --",
     "build:dev": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('lib/index.html','dist/index.html')\"",
     "build": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('lib/index.html','dist/index.html')\"",
-    "postinstall": "node -e \"try{if(!require('fs').existsSync('v2/node_modules'))require('child_process').execSync('npm --prefix v2 install --omit=dev --no-audit --no-fund --legacy-peer-deps',{stdio:'inherit'})}catch(e){console.error('v2 install skipped:',e.message)}\""
+    "storage": "node lib/maintenance.js --storage",
+    "postinstall": "node lib/maintenance.js --storage"
   },
   "author": "cyrilix",
   "license": "MIT",
