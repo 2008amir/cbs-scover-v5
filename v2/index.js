@@ -108,9 +108,9 @@ async function loadPlugin(file) {
         }
         const relative = path.relative(pluginDir, file)
         const parts = relative.split(path.sep)
-        handler.category = parts.length > 1
+        handler.category = handler.menuCategory || (parts.length > 1
             ? parts[0].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-            : 'Other'
+            : 'Other')
         const keys = []
         if (handler.command && !(handler.command instanceof RegExp)) {
             const commands = Array.isArray(handler.command) ? handler.command : [handler.command]
