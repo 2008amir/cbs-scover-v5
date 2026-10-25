@@ -14,7 +14,7 @@
 - Load provider credentials through lib/env-config.js with a repository-relative .env path; keep Gemini chat, Gemini video analysis, image generation and YouTube search key pools separate so no service borrows another pool's credentials.
 - Centralize Gemini authorization classification and bounded text requests in lib/keyserver.js; rejected credentials must not be retried across models, and Gemini/Hugging Face replies and logs must not expose raw provider errors because they can contain secrets.
 - Normalize voice environment settings in lib/voicechanger/env.js so invalid numerical settings never enter provider requests.
-- Bound every long-lived in-memory structure with a hard count cap in lib/maintenance.js (chat archive chats, learned style/facts people, connect chat list); unbounded growth over long uptimes caused host memory kills.
+- lib/maintenance.js bounds long-lived caches, serializes both media converter paths with single-thread FFmpeg, and samples Node CPU separately from children; host quotas alone enforce percentage limits.
 - Keep image generation in lib/image-generation.js with bounded requests, validated image buffers, and sanitized errors; V1 is evaluated with the repository-root require.
 - Keep menu parsing, native button payloads, and chat-bound reply resolution in lib/menu-buttons.js; persist bounded expiring menu actions in the shared settings store and handle taps before command parsing in both engines so supplied text cannot execute commands.
 - Keep fontpreview as a V2 command using the shared font registry and fontPlain replies; previews must never alter activation or restyle the chosen sample through the active font.
