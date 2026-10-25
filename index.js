@@ -1,8 +1,17 @@
+// Installed first (built-ins only) so a half-installed package found while
+// loading the bot is removed and reinstalled by the next start's npm install.
+const maintenance = require('./lib/maintenance');
+process.on('uncaughtExceptionMonitor', (err) => {
+    const removed = maintenance.repairBrokenPackage(err, __dirname);
+    if (err?.code === 'MODULE_NOT_FOUND') {
+        console.error('[HOST] A package file is missing (an earlier install was interrupted). ' +
+            (removed ? 'Removed the broken package; ' : '') + 'press Start again to reinstall it.');
+    }
+});
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { createConnectionHealth } = require('./lib/connection-health');
-const maintenance = require('./lib/maintenance');
 global.connectionHealth = createConnectionHealth();
 
 // Separate, isolated internet video knowledge engine. Live chat only ever calls
