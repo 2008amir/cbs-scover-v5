@@ -1200,17 +1200,8 @@ function ownerJid() {
 }
 
 async function reportChatbotError(EliteProTech, chatJid, mek, mode, err) {
-    const exact = err?.stack || err?.message || String(err);
     const personality = String(mode || 'normal').toUpperCase() === 'LOVESTART' ? 'LOVE_START' : String(mode || 'normal').toUpperCase();
-    const report = `CHATBOT ERROR\n\nPersonality: ${personality}\nChat ID: ${chatJid}\nMessage ID: ${mek?.key?.id || 'unknown'}\nTimestamp: ${new Date().toISOString()}\n\nError:\n${exact}`;
-    console.error(report);
-    const owner = ownerJid();
-    if (!owner || owner === chatJid) return;
-    try {
-        await EliteProTech.sendMessage(owner, { text: report });
-    } catch (notifyErr) {
-        console.error('chatbot owner notification failed:', notifyErr?.stack || notifyErr?.message || notifyErr);
-    }
+    await require('./lib/error-reporting').reportError(EliteProTech, mek, err, `Chatbot ${personality}`);
 }
 
 /* ---- independent knowledge scheduler -----------------------------------

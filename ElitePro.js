@@ -6,6 +6,7 @@ const apiProxy = require('./lib/apiproxy');
 const voiceChanger = require('./lib/voicechanger');
 const v2 = require('./lib/v2');
 const menuButtons = require('./lib/menu-buttons');
+const errorReporting = require('./lib/error-reporting');
 
 const HANDLER_FILE = path.join(__dirname, 'lib', 'v1', 'commands.js');
 
@@ -143,7 +144,7 @@ async function handleAiVoice(EliteProTech, m) {
     const flags = [match[1], match[2]].filter(Boolean);
     let hausa = flags.includes('hausa');
     const gender = flags.includes('female') ? 'female' : 'male';
-    const reply = (text) => EliteProTech.sendMessage(m.chat, { text }, { quoted: m });
+    const reply = (text) => errorReporting.replyText(EliteProTech, m, text);
 
     let text = body.slice(prefix.length + command.length).trim();
     if (!text && m?.quoted?.text) text = String(m.quoted.text).trim();
@@ -198,8 +199,7 @@ async function handleAiVoice(EliteProTech, m) {
     } catch (err) {
         recording = false;
         await EliteProTech.sendPresenceUpdate('paused', m.chat).catch(() => {});
-        console.error('AIVoice Error:', err?.message || err);
-        await reply('❌ Failed to generate the voice note. Please try again.').catch(() => {});
+        await errorReporting.reportError(EliteProTech, m, err, 'AI voice');
     }
 
 
@@ -710,7 +710,7 @@ async function handleExtraCommands(EliteProTech, m) {
     const command = (rest.split(/\s+/)[0] || '').toLowerCase();
     const args = rest.slice(command.length).replace(/^[^\S\n]+/, '').replace(/^\n/, '').trim();
 
-    const reply = (text) => EliteProTech.sendMessage(m.chat, { text }, { quoted: m });
+    const reply = (text) => errorReporting.replyText(EliteProTech, m, text);
     const isGroupChat = String(m.chat || '').endsWith('@g.us');
 
     /* ---------- VOICE CHANGER (Seed-VC speech-to-speech) ---------- */
@@ -1350,6 +1350,7 @@ async function reactToCommand(EliteProTech, m) {
 
 
 module.exports = async (EliteProTech, m, chatUpdate, store) => {
+    return errorReporting.withErrorContext(EliteProTech, m, async () => {
     try {
         if (!v2.claimMessage(EliteProTech, m)) return;
         rememberViewOnce(m);
@@ -1380,14 +1381,15 @@ module.exports = async (EliteProTech, m, chatUpdate, store) => {
             // access/license host, so no external request is made at load time.
             const data = fs.readFileSync(HANDLER_FILE, 'utf8');
             const mod = { exports: {} };
-            eval(`(function(module,exports,require){\n${patchHandler(data, proxyBase)}\n})`)(mod, mod.exports, require);
+            eval(`(function(module,exports,require,console){\n${patchHandler(data, proxyBase)}\n})`)(mod, mod.exports, require, errorReporting.handlerConsole);
 
             if (typeof mod.exports !== 'function') throw new Error('Invalid local V1 command handler');
             cachedHandler = mod.exports;
         }
 
-        return cachedHandler(EliteProTech, m, chatUpdate, store);
+        return await cachedHandler(EliteProTech, m, chatUpdate, store);
     } catch (err) {
-        console.error('Handler error:', err.message);
+        await errorReporting.reportError(EliteProTech, m, err, 'Command');
     }
+    });
 };
