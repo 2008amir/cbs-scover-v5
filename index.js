@@ -1092,7 +1092,13 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
     const historyKey = `${from}|${sender}`;
     // The durable DM archive includes the bot's own questions and survives
     // restarts / short-term cache expiry. Groups keep participant threads apart.
-    const archived = !from.endsWith('@g.us') ? (global.chatArchive?.[from] || []) : [];
+    const archived = !from.endsWith('@g.us') ? (global.chatArchive?.[from] || []).slice(-20) : [];
+    // The archive-only listener may have already logged this incoming batch.
+    // Do not include it a second time as a previous conversation turn.
+    for (const text of texts.slice().reverse()) {
+        if (archived[archived.length - 1] === `Them: ${text.trim().slice(0, 400)}`) archived.pop();
+        else break;
+    }
     const previous = archived.length ? archived : (global.userChats[historyKey] || []);
     global.userChats[historyKey] = previous.slice(-20);
     const priorHistory = global.userChats[historyKey].join('\n');
