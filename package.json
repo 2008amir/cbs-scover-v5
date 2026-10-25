@@ -26,6 +26,7 @@
     "cheerio": "^1.0.0-rc.12",
     "docx": "^9.14.0",
     "dotenv": "^17.4.2",
+    "fflate": "^0.8.3",
     "file-type": "^16.5.3",
     "fluent-ffmpeg": "^2.1.2",
     "form-data": "^4.0.0",
@@ -44,7 +45,7 @@
     "performance-now": "^2.1.0",
     "pino": "^10.1.0",
     "qrcode": "^1.5.3",
-    "sharp": "^0.32.6",
+    "sharp": "^0.34.5",
     "translate-google-api": "^1.0.4",
     "youtube-dl-exec": "^3.1.17",
     "yt-search": "^2.10.4"
