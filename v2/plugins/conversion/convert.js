@@ -6,6 +6,7 @@
    The menu section name ("Conversion") comes from this folder's name. */
 let handler = async () => {}
 
+handler.categoryName = 'Convert'
 handler.menuCommands = ['pdf2docx', 'img2docx']
 
 export default handler
