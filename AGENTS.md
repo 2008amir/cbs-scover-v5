@@ -9,7 +9,8 @@
 - Resolve copied font previews through the shared font registry so command selection and displayed styles stay consistent; suppress successful plugin registration logs while retaining load failures.
 - Keep connection monitoring and socket-scoped timer disposal in lib/connection-health.js so reconnects do not accumulate background tasks.
 - Never delete active Baileys authentication/encryption files during scheduled maintenance; only explicit logout may clear credentials.
-- Maintenance expires bounded caches by retention policy, not process RSS, to preserve active conversations and anti-delete recovery.
+- Maintenance uses retention, not RSS. lib/maintenance.js reports disk use and cleans only expired bot scratch paths, excluding credentials, voices, conversations, PDF collections, symlinks and unrelated OS files.
+- Install both engines through root workspaces, sharing compatible packages; retain API-incompatible versions to avoid command regressions and duplicate installs.
 - Load provider credentials through lib/env-config.js with a repository-relative .env path; keep Gemini chat, Gemini video analysis, image generation and YouTube search key pools separate so no service borrows another pool's credentials.
 - Centralize Gemini authorization classification and bounded text requests in lib/keyserver.js; rejected credentials must not be retried across models, and Gemini/Hugging Face replies and logs must not expose raw provider errors because they can contain secrets.
 - Normalize voice environment settings in lib/voicechanger/env.js so invalid numerical settings never enter provider requests.
