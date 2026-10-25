@@ -99,19 +99,6 @@ Official references:
 ---
 
 ## FOR PANEL DEPLOYMENT
-Install dependencies once at the repository root with `npm install --omit=dev`.
-V2 is included as a workspace; do not run a second install inside `v2`.
-For an existing deployment, stop the bot first, remove only root and V2
-`node_modules`, then reinstall from the updated root lockfile. Preserve `.env`,
-`session`, `database` and `lib/database`. Remove old uploaded ZIPs and unused
-backups only after saving any copies you need elsewhere. `npm cache clean --force`
-can reclaim the installation cache if your panel counts it toward disk use.
-Run `npm run storage` to measure repository file bytes against the 300 MB target;
-panel totals can also include caches, backups and host tools outside this folder.
-Expired bot scratch files are cleaned at startup and every five minutes, while
-saved voices, conversations, login credentials and PDF image collections remain.
-A hard 300 MB total requires panel quotas; preserved user data can exceed it.
-
 Run `npm start` with Node.js 22 or newer. Startup now runs one bot process,
 not a second nested copy. The existing 320 MB V8 heap ceiling does not limit
 total memory: media buffers and native libraries also count against the panel's

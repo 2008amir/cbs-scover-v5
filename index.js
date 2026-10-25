@@ -764,7 +764,6 @@ CURRENT PERSONALITY: ${mode === 'lovestart' ? 'LOVE_START' : mode.toUpperCase()}
 CURRENT CONVERSATION TOPIC (most recent lines): ${topicLine}
 
 - The latest message outranks everything older. Never let old history make you answer a topic they have already moved past.
-- ANSWERS TO YOUR OWN QUESTIONS (MANDATORY): look at your last "Bot:" line. If you asked something there, the latest message is almost always THEIR ANSWER to it — even if it is just a number, a name, "yes", "no" or one word. Treat it as that answer, acknowledge it in context (e.g. you asked "how many pages are in the book?" and they say "300" → react to 300 pages of that book) and carry the same conversation forward. Never treat such an answer as a new conversation and never ask the same question again.
 - If it is a direct question, answer that question first. If it is a statement, react to the statement first.
 ${timeGreetingBlock()}
 
@@ -1060,25 +1059,20 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
 
     global.userChats = global.userChats || {};
     global.userChatTimestamps = global.userChatTimestamps || {};
-    // Memory follows the chat, not the address: WhatsApp can deliver one
-    // person under phone-number and LID senders, which split the history.
-    const memKey = String(from || sender);
-    if (!global.userChats[memKey] && global.userChats[sender]) global.userChats[memKey] = global.userChats[sender];
-    global.userChats[memKey] = global.userChats[memKey] || [];
-    sender = memKey;
+    global.userChats[sender] = global.userChats[sender] || [];
     global.userChatTimestamps[sender] = Date.now();
     const userLine = texts.length > 1
         ? texts.map((t, i) => `(${i + 1}) ${t}`).join('\n')
         : (combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
     global.userChats[sender].push(`User: ${userLine}`);
-    while (global.userChats[sender].length > 40) global.userChats[sender].shift();
+    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
 
     learnStyle(sender, combined || '');
     rememberFacts(sender, combined || '');
     global.logChatMessage(from, 'Them', combined || (hasImage ? '[picture]' : hasAudio ? '[voice note]' : '[video]'));
 
 
-    const history = global.userChats[sender].join('\n').slice(-6000);
+    const history = global.userChats[sender].join('\n').slice(-4000);
     const mode = chatbotMode(from);
     const gender = chatbotGender(from);
     const exchanges = (global.chatArchive?.[from] || []).length;
@@ -1115,11 +1109,10 @@ async function generateAndSend(EliteProTech, from, sender, mek, texts, audioPart
     }
 
 // Random 1/2/3 s pause, then typing for exactly characters × 0.3 s.
-    // Remember the reply before typing starts, so an answer sent quickly
-    // still sees the question it answers.
-    global.userChats[sender].push(`Bot: ${clean}`);
-    while (global.userChats[sender].length > 40) global.userChats[sender].shift();
     await pauseThenType(EliteProTech, from, clean);
+
+    global.userChats[sender].push(`Bot: ${clean}`);
+    while (global.userChats[sender].length > 20) global.userChats[sender].shift();
     global.logChatMessage(from, 'You', clean);
 
     await EliteProTech.sendMessage(from, { text: clean }, { quoted: mek });
@@ -3040,19 +3033,33 @@ process.on('beforeExit', () => console.log('ℹ️ Event loop drained, keeping t
 setInterval(() => {}, 60000);
 
 /* Quiet maintenance only; never clear live state based on process RSS. */
-let cleaningTemp = false;
-async function cleanTempDirs() {
-    if (cleaningTemp) return;
-    cleaningTemp = true;
-    try { await maintenance.cleanDisposableFiles(); }
-    finally { cleaningTemp = false; }
+function cleanTempDirs() {
+    const dirs = [
+        path.join(__dirname, 'database', 'temp'),
+        path.join(__dirname, 'lib', 'database', 'temp'),
+        path.join(__dirname, 'v2', 'lib', 'database', 'temp'),
+        require('os').tmpdir()
+    ];
+    const now = Date.now();
+    for (const dir of dirs) {
+        try {
+            for (const name of fs.readdirSync(dir)) {
+                const file = path.join(dir, name);
+                try {
+                    const stat = fs.statSync(file);
+                    if (!stat.isFile()) continue;
+                    if (!/\.(ogg|opus|mp3|mp4|wav|webp|jpg|jpeg|png|pcm|tmp|webm|m4a)$/i.test(name)) continue;
+                    if (now - stat.mtimeMs > 30 * 60 * 1000) fs.unlinkSync(file);
+                } catch {}
+            }
+        } catch {}
+    }
 }
 
 function startMaintenance() {
     console.log(`[HOST] Single bot process pid=${process.pid}; ${maintenance.resourceSummary()}`);
-    cleanTempDirs().then(() => maintenance.reportStorage()).then(console.log).catch(() => {});
     setInterval(() => console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; ${maintenance.resourceSummary()}`), 5 * 60 * 1000);
-    setInterval(() => cleanTempDirs().catch(() => {}), 5 * 60 * 1000);
+    setInterval(cleanTempDirs, 15 * 60 * 1000);
     // Quietly re-apply the hard caps to every long-lived memory structure.
     setInterval(() => {
         try { maintenance.boundChatArchive(global.chatArchive); } catch {}

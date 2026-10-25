@@ -103,13 +103,13 @@
       "required": false
     },
     "HF_TOKEN": {
-      "description": "Hugging Face access token used by the voice changer (Qwen3-TTS 1.7B Base).",
+      "description": "Hugging Face access token used by the voice changer (Seed-VC).",
       "value": "",
       "required": false
     },
     "HF_SPACE": {
-      "description": "Hugging Face Space running Qwen3-TTS voice cloning.",
-      "value": "Qwen/Qwen3-TTS",
+      "description": "Hugging Face Space running Seed-VC voice conversion.",
+      "value": "Plachta/Seed-VC",
       "required": false
     },
     "GEMINI_KEY_5": {

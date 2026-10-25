@@ -9,8 +9,7 @@
 - Resolve copied font previews through the shared font registry so command selection and displayed styles stay consistent; suppress successful plugin registration logs while retaining load failures.
 - Keep connection monitoring and socket-scoped timer disposal in lib/connection-health.js so reconnects do not accumulate background tasks.
 - Never delete active Baileys authentication/encryption files during scheduled maintenance; only explicit logout may clear credentials.
-- Maintenance uses retention, not RSS. lib/maintenance.js reports disk use and cleans only expired bot scratch paths, excluding credentials, voices, conversations, PDF collections, symlinks and unrelated OS files.
-- Install both engines through root workspaces, sharing compatible packages; retain API-incompatible versions to avoid command regressions and duplicate installs.
+- Maintenance expires bounded caches by retention policy, not process RSS, to preserve active conversations and anti-delete recovery.
 - Load provider credentials through lib/env-config.js with a repository-relative .env path; keep Gemini chat, Gemini video analysis, image generation and YouTube search key pools separate so no service borrows another pool's credentials.
 - Centralize Gemini authorization classification and bounded text requests in lib/keyserver.js; rejected credentials must not be retried across models, and Gemini/Hugging Face replies and logs must not expose raw provider errors because they can contain secrets.
 - Normalize voice environment settings in lib/voicechanger/env.js so invalid numerical settings never enter provider requests.
@@ -19,5 +18,4 @@
 - Keep menu parsing, native button payloads, and chat-bound reply resolution in lib/menu-buttons.js; persist bounded expiring menu actions in the shared settings store and handle taps before command parsing in both engines so supplied text cannot execute commands.
 - Keep fontpreview as a V2 command using the shared font registry and fontPlain replies; previews must never alter activation or restyle the chosen sample through the active font.
 - Keep downloads in lib/youtube-download.js; audio retains its existing providers and bounded YouTube metadata search. Video title search uses Dailymotion with relevant-title filtering, while public Dailymotion/YouTube links and ytmp4 remain supported; allow only canonical approved source URLs. MP4 uses installed yt-dlp with bounded subprocess/files and no access-check bypass; relay only validated converted uploaded media.
-- Build music information captions in lib/youtube-download.js using the shared font registry and send with fontPlain so account font settings cannot alter the requested layout; official search must resolve videos metadata before winning the search race so statistics, duration and thumbnail belong to the selected video.
 - Detect a second bot linked to the same number (fromMe notify replies/reactions to prefixed messages this socket did not send) in lib/v2/index.js and warn the owner at most every 6 hours; another device cannot be stopped from code.
