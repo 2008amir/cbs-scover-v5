@@ -55,5 +55,12 @@
   },
   "trustedDependencies": [
     "youtube-dl-exec"
-  ]
+  ],
+  "allowScripts": {
+    "@ffmpeg-installer/linux-x64": true,
+    "@whiskeysockets/baileys": true,
+    "protobufjs": true,
+    "sharp": true,
+    "youtube-dl-exec": true
+  }
 }
