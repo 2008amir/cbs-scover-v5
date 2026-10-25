@@ -3064,12 +3064,8 @@ function cleanTempDirs() {
 }
 
 function startMaintenance() {
-    const sampleCpu = maintenance.createCpuSampler();
     console.log(`[HOST] Single bot process pid=${process.pid}; ${maintenance.resourceSummary()}`);
-    setInterval(() => {
-        const cpu = sampleCpu();
-        console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; cpu-one-core=${cpu.percent.toFixed(1)}% target=${cpu.targetPercent}% over-target=${Number(cpu.overTarget)} window=60s scope=node-only; ${maintenance.resourceSummary()}`);
-    }, 60 * 1000);
+    setInterval(() => console.log(`[HOST] uptime=${Math.floor(process.uptime())}s; ${maintenance.resourceSummary()}`), 5 * 60 * 1000);
     setInterval(cleanTempDirs, 15 * 60 * 1000);
     // Quietly re-apply the hard caps to every long-lived memory structure.
     setInterval(() => {
