@@ -14,6 +14,7 @@
 - Overlap audio download/upload with card delivery; relay only after card success. Hedge at most two provider fetches, cancel losers, convert only the winner to avoid duplicate CPU/storage cost.
 - lib/v2/index.js detects another linked bot from foreign fromMe replies/reactions to prefixed input; warn owner at most every 6 hours. Other devices cannot be stopped by code.
 - V2 resolves root dependencies only; postinstall/startup remove v2/node_modules and local npm caches (.npmrc cache is /tmp), preserving disk budget. Startup repairs incomplete packages plus npm's hidden lockfile; committed package-lock.json keeps installs light. Never delete credentials/user data.
+- Keep lockfile resolved tarballs on registry.npmjs.org with their integrity hashes; sandbox-cache URLs fail restricted hosting installs, so check all lockfile downloads after dependency changes.
 - Send bounded chatbot turns as Gemini contents apart from personality prompts; restore DM archives, isolate group threads, serialize chat/sender delivery, and record only sent replies so answers retain questions.
 - Both V2 menus include menuCommands/optional menuCategory without ownership; V1 alone executes shared conversions to prevent double replies.
 - lib/error-reporting.js owns request-scoped private causes and credential redaction; DM the initiator, never serialize provider payloads/stacks or globally monkey-patch console.
