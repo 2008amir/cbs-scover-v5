@@ -41,4 +41,13 @@ export async function sendRichHtml(EliteProTech, chat, { id, title, html, source
             }
         }
     }, {})
+
+    // Many WhatsApp versions cannot show rich cards; an HTML file opens in any phone's browser.
+    const name = String(title || id).replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '') || 'game'
+    await EliteProTech.sendMessage(chat, {
+        document: Buffer.from(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body>${html}</body></html>`),
+        mimetype: 'text/html',
+        fileName: `${name}.html`,
+        caption: 'If the card above shows "your version of WhatsApp doesn\'t support it", open this file to play.'
+    })
 }
