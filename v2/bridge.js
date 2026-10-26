@@ -15,6 +15,7 @@ import handleMessage, { plugins, initPlugins, initEvents, wireEventDispatchers }
 import { smsg, bind, decorateSocket } from './lib/myfunc.js'
 import commandLayer from '../lib/v2/index.js'
 import fonts from '../lib/fonts.js'
+import errorReporting from '../lib/error-reporting.js'
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -100,7 +101,7 @@ export async function handle(sock, m, { command, isCustomPrefix = false } = {}) 
         await handleMessage(sock, vm)
         return true
     } catch (e) {
-        console.error('[V2] command failed:', e?.message || e)
+        await errorReporting.reportError(sock, m, e, 'V2 command')
         return true
     }
 }
