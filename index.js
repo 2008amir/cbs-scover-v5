@@ -998,7 +998,7 @@ async function voiceParts(EliteProTech, mek) {
             }
         }];
     } catch (err) {
-        console.error('voice note read failed:', err?.message || err);
+        await require('./lib/error-reporting').reportError(EliteProTech, mek, err, 'Chatbot voice note');
         return null;
     }
 }
@@ -1034,7 +1034,7 @@ async function imageParts(EliteProTech, mek) {
             }
         }];
     } catch (err) {
-        console.error('image read failed:', err?.message || err);
+        await require('./lib/error-reporting').reportError(EliteProTech, mek, err, 'Chatbot image');
         return null;
     }
 }
