@@ -961,8 +961,7 @@ global.geminiChat = async function geminiChat(systemPrompt, userText, extraParts
     const cleanSystem = stripLocationData(systemPrompt).slice(0, 12000);
     if (cleanSystem) body.systemInstruction = { role: 'user', parts: [{ text: cleanSystem }] };
 
-    const configuredModel = process.env.GEMINI_CHAT_MODEL?.trim();
-    return keyServer.requestGemini(body, { keys, models: configuredModel ? [configuredModel] : GEMINI_MODELS });
+    return keyServer.requestGemini(body, { keys, models: keyServer.chatModels() });
 };
 
 
@@ -1755,7 +1754,7 @@ const DELETED_CONTEXT = {
 
 /* ===== ANTI-DELETE MESSAGE MEMORY =====
    Messages are kept on disk only for as long as recovery needs them:
-   24 hours in private chats, 1 hour in groups. Anything older is purged
+   24 hours for every message. Anything older is purged
    automatically by that retention policy. */
 
 const ANTIDELETE_STORE_DIR = path.join(__dirname, 'database', 'antidelete_store');
@@ -1782,8 +1781,9 @@ global.purgeAntiDeleteStore = function purgeAntiDeleteStore(force = false) {
                     ts = Number(parsed?._ts) || 0;
                     jid = parsed?.key?.remoteJid || '';
                 } catch {}
+                if (!name.endsWith('.json')) continue;
                 if (!ts) ts = fs.statSync(full).mtimeMs;
-                if (now - ts > antideleteTtl(jid)) {
+                if (now - ts >= antideleteTtl(jid)) {
                     fs.unlinkSync(full);
                     removed++;
                 }
@@ -1824,13 +1824,15 @@ global.antiDeleteSave = function antiDeleteSave(remoteJid, msgId, msg) {
 
         if (!remoteJid || !msgId || !msg?.message) return false;
         fs.mkdirSync(ANTIDELETE_STORE_DIR, { recursive: true });
-        fs.writeFileSync(antiDeleteFile(remoteJid, msgId), JSON.stringify({
+        const file = antiDeleteFile(remoteJid, msgId);
+        // Redelivery must not reset the original copy's 24-hour expiry.
+        if (fs.existsSync(file)) return true;
+        fs.writeFileSync(file, JSON.stringify({
             key: msg.key,
             message: msg.message,
             pushName: msg.pushName,
             _ts: Date.now()
         }));
-        global.purgeAntiDeleteStore();
         return true;
     } catch (err) {
         console.error('❌ Anti-delete save failed:', err?.message || err);
@@ -1845,15 +1847,17 @@ global.antiDeleteLoad = function antiDeleteLoad(remoteJid, msgId) {
 
         if (!data?.message) return null;
         const ts = Number(data._ts) || 0;
-        if (ts && Date.now() - ts > antideleteTtl(remoteJid)) return null;
+        if (ts && Date.now() - ts >= antideleteTtl(remoteJid)) {
+            fs.unlinkSync(antiDeleteFile(remoteJid, msgId));
+            return null;
+        }
         return data;
     } catch {
         return null;
     }
 };
 
-// Deletions are only forgotten by the retention purge (24h private / 1h
-// groups), never right after a restore, so repeated deletes of the same old
+// Deletions are only forgotten by the retention purge (24h in every chat), never right after a restore, so repeated deletes of the same old
 global.antiDeleteForget = function antiDeleteForget() { return true; };
 
 /* ===== WHO DELETED IT =====
@@ -1999,11 +2003,12 @@ global.restoreDeletedMessage = async function restoreDeletedMessage(EliteProTech
             });
         }
 
-        return send({ text: `${header}\n❌ Original content could not be recovered (expired or unsupported type).` });
+        await send({ text: `${header}\n❌ Original content could not be recovered (expired or unsupported type).` });
+        return false;
     } catch (err) {
         console.error('❌ Restore error:', err.message);
         try {
-            return send({ text: `${header}\n❌ Media could not be recovered.` });
+            await send({ text: `${header}\n❌ Media could not be recovered.` });
         } catch {}
     }
 };
@@ -2052,7 +2057,7 @@ global.enforceAntiDeleteGroup = async function enforceAntiDeleteGroup(EliteProTe
             (mode === 'private' ? `👥 Group: ${remoteJid}\n` : '') +
             `💬 The message is below:`;
 
-        await global.restoreDeletedMessage(
+        const restored = await global.restoreDeletedMessage(
             EliteProTech,
             target,
             warn,
@@ -2060,6 +2065,7 @@ global.enforceAntiDeleteGroup = async function enforceAntiDeleteGroup(EliteProTe
             quoted,
             [deletedBy, sentBy].filter(Boolean)
         );
+        if (restored === false || restored == null) return false;
         console.log(`✅ Anti-delete-group (${mode}) restored a message from`, remoteJid);
         return true;
     } catch (err) {
@@ -2809,9 +2815,9 @@ async function legacyRestoreMessage(EliteProTech, from, note, msg, quoted, menti
         .split('https://eliteproverified.vercel.app/').join(GROUP_LINK)
         .split('./database/elitepropic.jpg').join('./database/cbs-scover.jpg');
 
-    /* ---- Anti-delete memory: 3-day store, own messages included ---- */
+    /* ---- Anti-delete memory: 24-hour store, own messages included ---- */
 
-    // Store every message (including the ones you send) in our own 3-day store.
+    // Store every message (including the ones you send) in our own 24-hour store.
     const saveSig = 'function saveMessage(remoteJid, msgId, msg) {';
     if (code.includes(saveSig)) {
         code = code.replace(saveSig,
@@ -2839,12 +2845,12 @@ async function legacyRestoreMessage(EliteProTech, from, note, msg, quoted, menti
     // Do not skip restores just because the bot account sent or deleted it.
     const botSkip = 'if ((deletedBy && deletedBy.includes(botId)) || (sentBy && sentBy.includes(botId))) continue';
     if (code.includes(botSkip)) {
-        code = code.split(botSkip).join('// bot-owned messages are restored too (3-day memory)');
+        code = code.split(botSkip).join('// bot-owned messages are restored too (24-hour memory)');
     } else {
         console.log('⚠️ Anti-delete self-skip patch target not found.');
     }
 
-    // Keep the stored copy until the 3-day purge instead of deleting it now.
+    // Keep the stored copy until the 24-hour purge instead of deleting it now.
     code = code.split('fs.unlinkSync(path.join(antiDeleteDir, `${remoteJid}_${msgId}.json`))')
         .join('global.antiDeleteForget(remoteJid, msgId)');
 
@@ -3108,6 +3114,8 @@ function startMaintenance() {
     try { maintenance.trimStartupStorage(__dirname); } catch {}
     cleanTempDirs();
     setInterval(cleanTempDirs, 15 * 60 * 1000);
+    global.purgeAntiDeleteStore(true);
+    setInterval(() => global.purgeAntiDeleteStore(true), 60 * 1000).unref();
     // Quietly re-apply the hard caps to every long-lived memory structure.
     setInterval(() => {
         try { maintenance.boundChatArchive(global.chatArchive); } catch {}
