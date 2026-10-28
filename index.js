@@ -2774,9 +2774,9 @@ function patchSource(source) {
     if (_jid && !global.antiDeleteActiveFor(_jid)) return
 
     try { _handled = await global.enforceAntiDeleteGroup(EliteProTech, _jid, _by, _sent, msg, quoted) } catch (e) { console.error(e?.message || e) }
-    if (_handled) return
+    if (_handled) return true
     // Group messages are only ever handled by anti-delete-group.
-    if (String(_jid || '').endsWith('@g.us')) return
+    if (String(_jid || '').endsWith('@g.us')) return false
 
     return global.restoreDeletedMessage(EliteProTech, from, note, msg, quoted, mentions)
 }
