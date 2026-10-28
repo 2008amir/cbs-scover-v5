@@ -2774,9 +2774,9 @@ function patchSource(source) {
     if (_jid && !global.antiDeleteActiveFor(_jid)) return
 
     try { _handled = await global.enforceAntiDeleteGroup(EliteProTech, _jid, _by, _sent, msg, quoted) } catch (e) { console.error(e?.message || e) }
-    if (_handled) return
+    if (_handled) return true
     // Group messages are only ever handled by anti-delete-group.
-    if (String(_jid || '').endsWith('@g.us')) return
+    if (String(_jid || '').endsWith('@g.us')) return false
 
     return global.restoreDeletedMessage(EliteProTech, from, note, msg, quoted, mentions)
 }
@@ -2834,25 +2834,8 @@ async function legacyRestoreMessage(EliteProTech, from, note, msg, quoted, menti
         console.log('⚠️ Anti-delete loadMessage patch target not found.');
     }
 
-    // Capture outgoing messages too, so deleting your own message recovers it.
-    const captureSkip = 'if (!mek?.message || !mek?.key || mek.key.fromMe) return\n\n        saveMessage(';
-    if (code.includes(captureSkip)) {
-        code = code.split(captureSkip).join('if (!mek?.message || !mek?.key) return\n\n        saveMessage(');
-    } else {
-        console.log('⚠️ Anti-delete capture patch target not found.');
-    }
-
-    // Do not skip restores just because the bot account sent or deleted it.
-    const botSkip = 'if ((deletedBy && deletedBy.includes(botId)) || (sentBy && sentBy.includes(botId))) continue';
-    if (code.includes(botSkip)) {
-        code = code.split(botSkip).join('// bot-owned messages are restored too (24-hour memory)');
-    } else {
-        console.log('⚠️ Anti-delete self-skip patch target not found.');
-    }
-
-    // Keep the stored copy until the 24-hour purge instead of deleting it now.
-    code = code.split('fs.unlinkSync(path.join(antiDeleteDir, `${remoteJid}_${msgId}.json`))')
-        .join('global.antiDeleteForget(remoteJid, msgId)');
+    // Capture/revoke listeners in the bundled source now retain successful
+    // recoveries on disk and explicitly exclude the owner's own deletions.
 
     /* ---- Web server: never crash when the panel port is already taken ---- */
     const listenLine = '}).listen(PORT, "0.0.0.0", () => {});';
