@@ -34,7 +34,7 @@
 - [x] Separate chat and video Gemini key pools and document .env setup; .env now carries GEMINI_YOUTUBE_KEY_1–5 (slots 1–4 filled, 5 spare) and video learning reads only that pool — verified 3 video keys load separately from 4 chat keys, all 51 tests pass.
 - [x] Replace .create's HTTP 404 endpoint with Gemini; 19 tests pass, including mocked image-to-WhatsApp delivery.
 - [x] Give image generation its own .env pool (IMAGE_GEMINI_KEY_1–5) and the Flash 3 image model (gemini-3.1-flash-image); 24 tests pass.
-- [ ] Verify .create in live WhatsApp on OptikLink: blocked by local Gemini keys being rejected; valid image-enabled credentials and deployment are required.
+- [ ] Verify .create in live WhatsApp on OptikLink: ZonerAI image generation works here; upload updated files and test on a connected deployment.
 - [x] Validate Hugging Face configuration: 13 regression tests passed and live Seed-VC /predict schema matches; authenticated provider calls and OptikLink remain unverified.- [x] Fix .play/.splay "can't load the audio": downloaded files are now validated (HTML/error pages rejected with a clean message) and normalized to real 128k MP3 via ffmpeg before sending; syntax check and all 51 tests pass. Live WhatsApp playback and the third-party download service uptime remain unverified.
 - [x] Fix automatic offline: WhatsApp session invalidation (401) now clears dead credentials once and re-pairs automatically on a schedule; connection-replaced (440) reconnects slowly to avoid instance fights; reconnects re-announce online. All 74 tests pass. Live long-uptime behavior needs a connected deployment.
 - [ ] Verify the bot stays online for weeks on the host after redeploy; if it drops again, capture the console text at the moment it stops.
