@@ -1,3 +1,5 @@
+- [ ] Fix shared-store capture scope blocking command events; remove unsupported npm jobs option.
+- [ ] Investigate and fix intermittent .play provider failures while preserving validated audio and delivery order.
 - [x] Fix continuous anti-delete: capture before commands, handle revoke updates/upserts/deletes, respect per-chat activation, retry failed sends, preserve copies through redelivery and expire each after 24 hours. Simulated long-uptime/reconnect and per-message expiry tests pass; live deployment remains unverified.
 - [x] Fix group status invalid media type: prepare text/image/video/audio with Baileys before wrapping groupStatusMessageV2 and relaying, using the published protocol implementation. Real text generation and protobuf encoding tested; live WhatsApp rendering remains unverified.
 - [x] Switch image prompts to ZonerAI (real 2048x2048 JPEG returned) and route ai/gpt/chatgpt through chatbot Gemini keys and shared model selection. Gemini live request still reports KEY_INVALID; accepted replacement chat credentials are required.
